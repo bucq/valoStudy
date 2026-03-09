@@ -64,6 +64,30 @@ function matchFromAliasMap(
 }
 
 /**
+ * タイトルからコーチング種別を判定する。
+ * チーム・複数人コーチングキーワードが含まれる場合は 'team'、それ以外は 'individual'。
+ */
+export function detectCoachingType(title: string): 'individual' | 'team' {
+  const teamPatterns = [
+    /チーム/,
+    /team/i,
+    /スクリム/,
+    /scrim/i,
+    /5\s*[vx]\s*5/i,
+    /複数/,
+    /全員/,
+    /みんな/,
+    /グループ/,
+    /group/i,
+    /部活/,
+    /clan/i,
+    /クラン/,
+    /練習試合/,
+  ];
+  return teamPatterns.some(p => p.test(title)) ? 'team' : 'individual';
+}
+
+/**
  * Tier 1: Regex 抽出
  * タイトル → タグ → 説明（先頭500文字）の順に検索。
  * cost: $0 / 同期処理

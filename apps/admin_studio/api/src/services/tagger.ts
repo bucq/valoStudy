@@ -9,6 +9,7 @@ import { eq, inArray } from 'drizzle-orm';
 import { db } from '../db.js';
 import { videos } from '@public-api/db/schema.js';
 import { analyzeThumbnail } from '../extractors/thumbnailExtractor.js';
+import { detectCoachingType } from '../extractors/regexExtractor.js';
 import { sampleGameplayFrames } from '../extractors/frameSampler.js';
 import { sampleGameplayFramesLocal } from '../extractors/frameSamplerLocal.js';
 
@@ -75,6 +76,7 @@ export async function tagPendingVideos(opts: TagOptions): Promise<{ processed: n
       mapSource: videos.mapSource,
       agentSource: videos.agentSource,
       rankSource: videos.rankSource,
+      coachingType: videos.coachingType,
     })
     .from(videos)
     .where(
@@ -139,6 +141,9 @@ export async function tagPendingVideos(opts: TagOptions): Promise<{ processed: n
             (result.agent !== null && result.agent_confidence !== 'high') ||
             (result.rank !== null && result.rank_confidence !== 'high') ? 1 : 0;
 
+        // LLM判定を優先し、未返却の場合はタイトルregexにフォールバック
+        const coachingType = result.coaching_type ?? detectCoachingType(video.title);
+
         if (!dryRun) {
           await db.update(videos).set({
             map: resolvedMap.value,
@@ -150,6 +155,7 @@ export async function tagPendingVideos(opts: TagOptions): Promise<{ processed: n
             mapConfidence: result.map !== null ? CONFIDENCE_FLOAT_MAP[result.map_confidence] ?? 0.45 : 0,
             agentConfidence: result.agent !== null ? CONFIDENCE_FLOAT_MAP[result.agent_confidence] ?? 0.45 : 0,
             rankConfidence: result.rank !== null ? CONFIDENCE_FLOAT_MAP[result.rank_confidence] ?? 0.45 : 0,
+            coachingType,
             aiTaggingStatus: 'complete',
             aiTaggedAt: now,
             updatedAt: now,

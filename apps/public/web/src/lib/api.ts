@@ -11,6 +11,7 @@ export interface VideoItem {
   map:          string | null;
   agent:        string | null;
   rank:         string | null;
+  coachingType: string;
   mapConfidence:   number;
   agentConfidence: number;
   rankConfidence:  number;
@@ -31,12 +32,13 @@ export interface FiltersResponse {
 }
 
 export interface VideoFilters {
-  map?:   string;
-  agent?: string;
-  rank?:  string;
-  coach?: string;
-  page?:  number;
-  limit?: number;
+  map?:          string;
+  agent?:        string;
+  rank?:         string;
+  coach?:        string;
+  coachingType?: 'individual' | 'team';
+  page?:         number;
+  limit?:        number;
 }
 
 export async function fetchVideos(
@@ -44,12 +46,13 @@ export async function fetchVideos(
   filters: VideoFilters,
 ): Promise<VideosResponse> {
   const params = new URLSearchParams();
-  if (filters.map)   params.set('map',   filters.map);
-  if (filters.agent) params.set('agent', filters.agent);
-  if (filters.rank)  params.set('rank',  filters.rank);
-  if (filters.coach) params.set('coach', filters.coach);
-  if (filters.page)  params.set('page',  String(filters.page));
-  if (filters.limit) params.set('limit', String(filters.limit));
+  if (filters.map)          params.set('map',          filters.map);
+  if (filters.agent)        params.set('agent',        filters.agent);
+  if (filters.rank)         params.set('rank',         filters.rank);
+  if (filters.coach)        params.set('coach',        filters.coach);
+  if (filters.coachingType) params.set('coachingType', filters.coachingType);
+  if (filters.page)         params.set('page',         String(filters.page));
+  if (filters.limit)        params.set('limit',        String(filters.limit));
 
   const res = await fetch(`${apiBase}/api/videos?${params}`);
   if (!res.ok) throw new Error(`fetchVideos failed: ${res.status}`);

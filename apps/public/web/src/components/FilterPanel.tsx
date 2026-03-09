@@ -35,7 +35,7 @@ export default function FilterPanel({ availableFilters, initialFilters }: Props)
     setFilters(cleared);
     window.dispatchEvent(new CustomEvent('filterChange', { detail: cleared }));
     const url = new URL(window.location.href);
-    ['map', 'agent', 'rank', 'coach', 'page'].forEach(k => url.searchParams.delete(k));
+    ['map', 'agent', 'rank', 'coach', 'coachingType', 'page'].forEach(k => url.searchParams.delete(k));
     window.history.replaceState({}, '', url.toString());
   }, []);
 
@@ -47,7 +47,7 @@ export default function FilterPanel({ availableFilters, initialFilters }: Props)
     });
   }, []);
 
-  const hasActiveFilters = filters.map || filters.agent || filters.rank || filters.coach;
+  const hasActiveFilters = filters.map || filters.agent || filters.rank || filters.coach || filters.coachingType;
 
   return (
     <div className="filter-wrap">
@@ -141,6 +141,35 @@ export default function FilterPanel({ availableFilters, initialFilters }: Props)
         {/* ── 折りたたみコンテンツ ──────────────────────────────────── */}
         <div className={`filter-body${isOpen ? '' : ' collapsed'}`}>
           <div style={{ paddingBottom: '12px' }}>
+
+            {/* ── TYPE ROW ────────────────────────────────────────────── */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+              <span className="filter-label" style={{ width: '52px', flexShrink: 0, fontSize: '10px', letterSpacing: '0.14em' }}>TYPE</span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {(['individual', 'team'] as const).map(type => (
+                  <button
+                    key={type}
+                    onClick={() => update('coachingType', type)}
+                    style={{
+                      padding: '4px 12px',
+                      fontSize: '10px',
+                      fontFamily: "'Rajdhani', sans-serif",
+                      fontWeight: 700,
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      cursor: 'pointer',
+                      border: `1px solid ${filters.coachingType === type ? 'var(--c-red)' : 'var(--c-border-dim)'}`,
+                      background: filters.coachingType === type ? 'rgba(255,70,85,0.12)' : 'var(--c-surface-2)',
+                      color: filters.coachingType === type ? 'var(--c-red)' : 'var(--c-muted)',
+                      transition: 'all 0.15s',
+                      clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%)',
+                    }}
+                  >
+                    {type === 'individual' ? '👤 SOLO' : '👥 TEAM'}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {/* ── MAP ROW ─────────────────────────────────────────────── */}
             {availableFilters.maps.length > 0 && (

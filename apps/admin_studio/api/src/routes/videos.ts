@@ -22,6 +22,7 @@ videosRoute.get('/', async (c) => {
   if (q['coaching'] !== undefined) {
     conditions.push(eq(videos.isValorantCoaching, parseInt(q['coaching'], 10)));
   }
+  if (q['coachingType']) conditions.push(eq(videos.coachingType, q['coachingType']));
   if (q['q']) {
     conditions.push(like(videos.title, `%${q['q']}%`));
   }
@@ -46,6 +47,7 @@ videosRoute.get('/', async (c) => {
       mapSource: videos.mapSource,
       agentSource: videos.agentSource,
       rankSource: videos.rankSource,
+      coachingType: videos.coachingType,
       aiTaggingStatus: videos.aiTaggingStatus,
       reviewNeeded: videos.reviewNeeded,
       isValorantCoaching: videos.isValorantCoaching,

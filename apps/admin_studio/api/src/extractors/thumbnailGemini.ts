@@ -134,7 +134,7 @@ export async function analyzeThumbnailGemma(
           text: `
 分析対象の画像（サムネイルとプレイ中のフレーム）を、上記のカタロググリッド画像と比較して、マップ・エージェント・ランクを特定してください。
 重要: 結果は必ず以下のJSON形式でのみ出力してください。説明や装飾（\`\`\`json 等）は一切不要です。
-JSON Format: {"map": string|null, "agent": string|null, "rank": string|null, "map_confidence": "high"|"medium"|"low", "agent_confidence": "high"|"medium"|"low", "rank_confidence": "high"|"medium"|"low", "reasoning": string}`
+JSON Format: {"map": string|null, "agent": string|null, "rank": string|null, "coaching_type": "individual"|"team", "map_confidence": "high"|"medium"|"low", "agent_confidence": "high"|"medium"|"low", "rank_confidence": "high"|"medium"|"low", "reasoning": string}`
         }
       ],
     }],
@@ -171,6 +171,7 @@ export async function analyzeThumbnailGemmaStepwise(
     map: mapResult?.value ?? null,
     agent: agentResult?.value ?? null,
     rank: rankResult?.value ?? null,
+    coaching_type: agentResult?.coaching_type ?? 'individual',
     map_confidence: mapResult?.confidence ?? 'low',
     agent_confidence: agentResult?.confidence ?? 'low',
     rank_confidence: rankResult?.confidence ?? 'low',
@@ -182,6 +183,7 @@ export async function analyzeThumbnailGemmaStepwise(
 interface StepResult {
   value: string | null;
   confidence: 'high' | 'medium' | 'low';
+  coaching_type?: 'individual' | 'team';
   reasoning: string;
 }
 
@@ -265,9 +267,10 @@ async function inferStepAgent(imageData: ImageData, apiKey: string, title?: stri
   parts.push({ inline_data: { mime_type: imageData.mediaType, data: imageData.base64 } });
   if (title) parts.push({ text: `動画タイトル: ${title}` });
   parts.push({
-    text: `サムネイルに写っているエージェントをカタログと比較して特定してください。
+    text: `サムネイルに写っているエージェントをカタログと比較して特定し、あわせてコーチング種別を判定してください。
+coaching_type: タイトルと文脈から「individual」（個人コーチング）または「team」（チーム・複数人コーチング）を判定。「チーム」「スクリム」「team」「5v5」「練習試合」等のキーワードがある場合は "team"。
 重要: 結果は必ず以下のJSON形式でのみ出力してください。
-JSON Format: {"value": string|null, "confidence": "high"|"medium"|"low", "reasoning": string}
+JSON Format: {"value": string|null, "confidence": "high"|"medium"|"low", "coaching_type": "individual"|"team", "reasoning": string}
 value は以下から選択: ${AGENT_LABELS.join(', ')}, または null`,
   });
 
@@ -336,24 +339,22 @@ async function callGeminiStepApi(
     const rawText = (data.candidates?.[0]?.content?.parts ?? []).map(p => p.text ?? '').join('');
     if (!rawText) return null;
     const text = extractJsonBlock(rawText.replace(/```json\n?/, '').replace(/\n?```/, '').trim());
-    try {
-      const parsed = JSON.parse(text) as StepResult;
+    const parseStepResult = (parsed: StepResult): StepResult => {
       const conf = parsed.confidence;
+      const ct = parsed.coaching_type;
       return {
         value: parsed.value === 'null' ? null : (parsed.value || null),
         confidence: (conf === 'high' || conf === 'medium' || conf === 'low') ? conf : 'low',
+        coaching_type: (ct === 'individual' || ct === 'team') ? ct : undefined,
         reasoning: parsed.reasoning ?? '',
       };
+    };
+    try {
+      return parseStepResult(JSON.parse(text) as StepResult);
     } catch {
       const sanitized = sanitizeJsonStrings(text);
       try {
-        const parsed = JSON.parse(sanitized) as StepResult;
-        const conf = parsed.confidence;
-        return {
-          value: parsed.value === 'null' ? null : (parsed.value || null),
-          confidence: (conf === 'high' || conf === 'medium' || conf === 'low') ? conf : 'low',
-          reasoning: parsed.reasoning ?? '',
-        };
+        return parseStepResult(JSON.parse(sanitized) as StepResult);
       } catch (err) {
         console.error(`[thumbnailLLM/gemma-step/${step}] JSON parse error:`, err, rawText.slice(0, 200));
         return null;
@@ -497,12 +498,13 @@ function buildGenerationConfig() {
         map: { type: 'string', nullable: true, enum: [...MAP_LABELS, null] },
         agent: { type: 'string', nullable: true, enum: [...AGENT_LABELS, null] },
         rank: { type: 'string', nullable: true, enum: [...RANK_LABELS, null] },
+        coaching_type: { type: 'string', enum: ['individual', 'team'] },
         map_confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
         agent_confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
         rank_confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
         reasoning: { type: 'string' },
       },
-      required: ['map', 'agent', 'rank', 'map_confidence', 'agent_confidence', 'rank_confidence', 'reasoning'],
+      required: ['map', 'agent', 'rank', 'coaching_type', 'map_confidence', 'agent_confidence', 'rank_confidence', 'reasoning'],
     },
     temperature: 0.1,
     maxOutputTokens: 8192,  // gemini-2.5-flash は thinking トークンも消費するため大きめに設定
@@ -564,6 +566,7 @@ function normalizeGeminiResult(raw: LLMExtractionResult): LLMExtractionResult {
     map: raw.map === 'null' ? null : raw.map,
     agent: raw.agent === 'null' ? null : raw.agent,
     rank: raw.rank === 'null' ? null : raw.rank,
+    coaching_type: raw.coaching_type === 'team' ? 'team' : 'individual',
     map_confidence: validConf(raw.map_confidence),
     agent_confidence: validConf(raw.agent_confidence),
     rank_confidence: validConf(raw.rank_confidence),

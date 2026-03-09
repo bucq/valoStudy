@@ -32,6 +32,7 @@ export interface Video {
   mapSource:       string | null;
   agentSource:     string | null;
   rankSource:      string | null;
+  coachingType:    string;
   aiTaggingStatus: string;
   reviewNeeded:    number;
   isValorantCoaching: number;

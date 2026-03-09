@@ -40,6 +40,11 @@ export const videos = sqliteTable(
     // 0 = 偽陽性（非表示）
     isValorantCoaching: integer('is_valorant_coaching').notNull().default(1),
 
+    // ── コーチング種別 ─────────────────────────────────────────────
+    // 'individual' = 個人コーチング（デフォルト）
+    // 'team'       = チーム・複数人コーチング
+    coachingType: text('coaching_type').notNull().default('individual'),
+
     // ── AIタグ付け状態 ─────────────────────────────────────────────
     // 'pending'     → 収集済み・LLM未処理
     // 'in_progress' → LLM処理中

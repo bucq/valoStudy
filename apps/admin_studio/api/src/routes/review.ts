@@ -48,7 +48,7 @@ reviewRoute.patch('/:id/correct', async (c) => {
   const id = c.req.param('id');
   const now = new Date().toISOString();
 
-  let body: { map?: string | null; agent?: string | null; rank?: string | null };
+  let body: { map?: string | null; agent?: string | null; rank?: string | null; coachingType?: string };
   try {
     body = await c.req.json();
   } catch {
@@ -71,6 +71,9 @@ reviewRoute.patch('/:id/correct', async (c) => {
     update['rank'] = body.rank ?? null;
     update['rankSource'] = body.rank != null ? 'manual' : null;
     update['rankConfidence'] = body.rank != null ? 1.0 : 0;
+  }
+  if ('coachingType' in body && body.coachingType != null) {
+    update['coachingType'] = body.coachingType;
   }
 
   await db.update(videos).set(update).where(eq(videos.id, id));

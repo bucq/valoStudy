@@ -37,6 +37,7 @@ export interface LLMExtractionResult {
   map: string | null;
   agent: string | null;
   rank: string | null;
+  coaching_type: 'individual' | 'team';
   map_confidence: 'high' | 'medium' | 'low';
   agent_confidence: 'high' | 'medium' | 'low';
   rank_confidence: 'high' | 'medium' | 'low';

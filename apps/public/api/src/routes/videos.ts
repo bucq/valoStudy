@@ -10,24 +10,26 @@ import type { Env } from '../index';
 export const videosRoute = new Hono<{ Bindings: Env }>();
 
 const filterSchema = z.object({
-  map:    z.string().optional(),
-  agent:  z.string().optional(),
-  rank:   z.string().optional(),
-  coach:  z.string().optional(),
-  page:   z.coerce.number().int().positive().default(1),
-  limit:  z.coerce.number().int().min(1).max(50).default(24),
+  map:          z.string().optional(),
+  agent:        z.string().optional(),
+  rank:         z.string().optional(),
+  coach:        z.string().optional(),
+  coachingType: z.enum(['individual', 'team']).optional(),
+  page:         z.coerce.number().int().positive().default(1),
+  limit:        z.coerce.number().int().min(1).max(50).default(24),
 });
 
 /** GET /api/videos — フィルタリング・ページング */
 videosRoute.get('/', zValidator('query', filterSchema), async (c) => {
   const db = drizzle(c.env.DB);
-  const { map, agent, rank, coach, page, limit } = c.req.valid('query');
+  const { map, agent, rank, coach, coachingType, page, limit } = c.req.valid('query');
 
   const conditions = [eq(videos.isValorantCoaching, 1)];
-  if (map)   conditions.push(eq(videos.map,          map));
-  if (agent) conditions.push(eq(videos.agent,        agent));
-  if (rank)  conditions.push(eq(videos.rank,         rank));
-  if (coach) conditions.push(eq(videos.channelTitle, coach));
+  if (map)          conditions.push(eq(videos.map,          map));
+  if (agent)        conditions.push(eq(videos.agent,        agent));
+  if (rank)         conditions.push(eq(videos.rank,         rank));
+  if (coach)        conditions.push(eq(videos.channelTitle, coach));
+  if (coachingType) conditions.push(eq(videos.coachingType, coachingType));
 
   const where = and(...conditions);
   const offset = (page - 1) * limit;
@@ -44,6 +46,7 @@ videosRoute.get('/', zValidator('query', filterSchema), async (c) => {
       map:          videos.map,
       agent:        videos.agent,
       rank:         videos.rank,
+      coachingType: videos.coachingType,
       mapConfidence:   videos.mapConfidence,
       agentConfidence: videos.agentConfidence,
       rankConfidence:  videos.rankConfidence,

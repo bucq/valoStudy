@@ -5,23 +5,24 @@ import { MAPS, AGENTS, RANKS } from '../lib/valorant.ts';
 const STATUSES = ['pending', 'in_progress', 'complete', 'skipped', 'failed'];
 
 interface Filters {
-  map:     string;
-  agent:   string;
-  rank:    string;
-  status:  string;
-  review:  string;
-  channel: string;
-  q:       string;
+  map:          string;
+  agent:        string;
+  rank:         string;
+  status:       string;
+  review:       string;
+  channel:      string;
+  q:            string;
+  coachingType: string;
 }
 
-const INIT_FILTERS: Filters = { map: '', agent: '', rank: '', status: '', review: '', channel: '', q: '' };
+const INIT_FILTERS: Filters = { map: '', agent: '', rank: '', status: '', review: '', channel: '', q: '', coachingType: '' };
 
 interface EditableVideo extends Video {
-  _editing: { map: string; agent: string; rank: string };
+  _editing: { map: string; agent: string; rank: string; coachingType: string };
 }
 
 function toEditable(v: Video): EditableVideo {
-  return { ...v, _editing: { map: v.map ?? '', agent: v.agent ?? '', rank: v.rank ?? '' } };
+  return { ...v, _editing: { map: v.map ?? '', agent: v.agent ?? '', rank: v.rank ?? '', coachingType: v.coachingType ?? 'individual' } };
 }
 
 export default function VideoListPage() {
@@ -54,6 +55,7 @@ export default function VideoListPage() {
       if (f.review) params.set('review', f.review);
       if (f.channel) params.set('coach',  f.channel);
       if (f.q)       params.set('q',      f.q);
+      if (f.coachingType) params.set('coachingType', f.coachingType);
       const res = await apiFetch<VideoListResponse>(`/api/videos?${params}`);
       setVideos(res.videos.map(toEditable));
       setTotal(res.total);
@@ -70,7 +72,7 @@ export default function VideoListPage() {
   const handleSearch = () => { setPage(1); setApplied(filters); };
   const handleReset  = () => { setFilters(INIT_FILTERS); setPage(1); setApplied(INIT_FILTERS); };
 
-  const setField = (id: string, field: 'map' | 'agent' | 'rank', value: string) => {
+  const setField = (id: string, field: 'map' | 'agent' | 'rank' | 'coachingType', value: string) => {
     setVideos(vs => vs.map(v => v.id === id ? { ...v, _editing: { ...v._editing, [field]: value } } : v));
   };
 
@@ -81,13 +83,14 @@ export default function VideoListPage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          map:   v._editing.map   || null,
-          agent: v._editing.agent || null,
-          rank:  v._editing.rank  || null,
+          map:          v._editing.map   || null,
+          agent:        v._editing.agent || null,
+          rank:         v._editing.rank  || null,
+          coachingType: v._editing.coachingType || 'individual',
         }),
       });
       setMsg(`✔ ${v.title} — 保存しました`);
-      setVideos(vs => vs.map(x => x.id === v.id ? { ...x, map: v._editing.map || null, agent: v._editing.agent || null, rank: v._editing.rank || null } : x));
+      setVideos(vs => vs.map(x => x.id === v.id ? { ...x, map: v._editing.map || null, agent: v._editing.agent || null, rank: v._editing.rank || null, coachingType: v._editing.coachingType } : x));
     } catch (e) { setMsg(`エラー: ${String(e)}`); }
   };
 
@@ -177,6 +180,11 @@ export default function VideoListPage() {
             <option value="">全 Channel</option>
             {channels.map(ch => <option key={ch} value={ch}>{ch}</option>)}
           </select>
+          <select className="field" value={filters.coachingType} onChange={e => setFilters(f => ({ ...f, coachingType: e.target.value }))}>
+            <option value="">全 Type</option>
+            <option value="individual">Individual</option>
+            <option value="team">Team</option>
+          </select>
           <button onClick={handleSearch} className="btn btn-accent">検索</button>
           <button onClick={handleReset}  className="btn btn-ghost">リセット</button>
         </div>
@@ -187,7 +195,7 @@ export default function VideoListPage() {
         <table className="data-table">
           <thead>
             <tr>
-              {['Thumb', 'Title', 'Channel', 'Map', 'Agent', 'Rank', 'Status', 'Review', 'Actions'].map(h => (
+              {['Thumb', 'Title', 'Channel', 'Map', 'Agent', 'Rank', 'Type', 'Status', 'Review', 'Actions'].map(h => (
                 <th key={h}>{h}</th>
               ))}
             </tr>
@@ -195,14 +203,14 @@ export default function VideoListPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={9} className="text-center py-10 text-dim" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem', letterSpacing: '0.1em' }}>
+                <td colSpan={10} className="text-center py-10 text-dim" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem', letterSpacing: '0.1em' }}>
                   <span className="live-dot text-accent" style={{ display: 'inline-block', marginRight: '0.5em' }} />
                   LOADING...
                 </td>
               </tr>
             ) : videos.length === 0 ? (
               <tr>
-                <td colSpan={9} className="text-center py-10 text-faint" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem', letterSpacing: '0.1em' }}>
+                <td colSpan={10} className="text-center py-10 text-faint" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem', letterSpacing: '0.1em' }}>
                   NO RESULTS
                 </td>
               </tr>
@@ -242,6 +250,12 @@ export default function VideoListPage() {
                   <select className="field" style={{ width: '6rem', fontSize: '0.72rem' }} value={v._editing.rank} onChange={e => setField(v.id, 'rank', e.target.value)}>
                     <option value="">—</option>
                     {RANKS.map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </td>
+                <td>
+                  <select className="field" style={{ width: '6.5rem', fontSize: '0.72rem' }} value={v._editing.coachingType} onChange={e => setField(v.id, 'coachingType', e.target.value)}>
+                    <option value="individual">Individual</option>
+                    <option value="team">Team</option>
                   </select>
                 </td>
                 <td>
