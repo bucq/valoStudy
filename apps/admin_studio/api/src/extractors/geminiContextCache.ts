@@ -105,14 +105,18 @@ async function createCachedContent(
     model: `models/${model}`,
     displayName: 'valocoach-catalog-v2',
     system_instruction: {
-      parts: [{
-        text: 'あなたはValorantのeスポーツアナリストです。最初にキャッシュされたリファレンスカタログ（マップ・エージェント・ランクの参照画像群）が提供されています。各推論リクエストではこのカタログを参照して回答してください。',
-      }],
+      parts: [
+        {
+          text: 'あなたはValorantのeスポーツアナリストです。最初にキャッシュされたリファレンスカタログ（マップ・エージェント・ランクの参照画像群）が提供されています。各推論リクエストではこのカタログを参照して回答してください。',
+        },
+      ],
     },
-    contents: [{
-      role: 'user',
-      parts,
-    }],
+    contents: [
+      {
+        role: 'user',
+        parts,
+      },
+    ],
     ttl: `${CACHE_TTL_SECONDS}s`,
   };
 
@@ -132,7 +136,7 @@ async function createCachedContent(
       return null;
     }
 
-    const data = await res.json() as { name?: string };
+    const data = (await res.json()) as { name?: string };
     return data.name ?? null;
   } catch (err) {
     console.error('[contextCache] fetch error:', err);

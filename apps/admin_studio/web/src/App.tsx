@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import Sidebar        from './components/layout/Sidebar.tsx';
-import VideoListPage  from './components/VideoListPage.tsx';
-import CollectPage    from './components/CollectPage.tsx';
-import TagPage        from './components/TagPage.tsx';
-import ReviewPage     from './components/ReviewPage.tsx';
-import SyncPage       from './components/SyncPage.tsx';
+import CollectPage from './components/CollectPage.tsx';
+import Sidebar from './components/layout/Sidebar.tsx';
+import ReviewPage from './components/ReviewPage.tsx';
+import SyncPage from './components/SyncPage.tsx';
+import TagPage from './components/TagPage.tsx';
+import VideoListPage from './components/VideoListPage.tsx';
 
 export type Page = 'videos' | 'collect' | 'tag' | 'review' | 'sync';
 
@@ -17,11 +17,11 @@ export default function App() {
       <Sidebar current={page} onNavigate={setPage} />
       <main className="relative flex-1 overflow-y-auto p-6">
         <div className="max-w-7xl mx-auto">
-          {page === 'videos'  && <VideoListPage />}
+          {page === 'videos' && <VideoListPage />}
           {page === 'collect' && <CollectPage />}
-          {page === 'tag'     && <TagPage />}
-          {page === 'review'  && <ReviewPage />}
-          {page === 'sync'    && <SyncPage />}
+          {page === 'tag' && <TagPage />}
+          {page === 'review' && <ReviewPage />}
+          {page === 'sync' && <SyncPage />}
         </div>
       </main>
     </div>

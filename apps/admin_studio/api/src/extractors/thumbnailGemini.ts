@@ -1,9 +1,15 @@
-import { MAP_LABELS, AGENT_LABELS, RANK_LABELS } from './valorant';
-import type { LLMExtractionResult } from './types';
-import { getAllCatalogsLabeled, getCatalogGrids, getMapDisplayImages, getAgentPortraitImages, getRankCatalogImages, type LabeledCatalogEntry } from './catalogLoader';
-import { getOrCreateCatalogCache } from './geminiContextCache';
+import {
+  getAgentPortraitImages,
+  getAllCatalogsLabeled,
+  getCatalogGrids,
+  getMapDisplayImages,
+  getRankCatalogImages,
+  type LabeledCatalogEntry,
+} from './catalogLoader';
 import type { FrameImageData } from './frameSampler';
-import { type ImageData, buildAnalysisPrompt } from './thumbnailShared';
+import { buildAnalysisPrompt, type ImageData } from './thumbnailShared';
+import type { LLMExtractionResult } from './types';
+import { AGENT_LABELS, MAP_LABELS, RANK_LABELS } from './valorant';
 
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
@@ -19,14 +25,14 @@ const GEMINI_MODEL = 'gemini-3.1-flash-lite-preview';
 const GEMMA_MODEL = 'gemma-3-27b-it';
 
 /** 個別画像で送るカテゴリ（MAP_SCENE・AGENT_ICON は除外、AGENT_PORTRAIT のみ採用） */
-const INDIVIDUAL_CATEGORIES = new Set(['MAP_MINIMAP'/*, 'AGENT_PORTRAIT'*/]);
+const INDIVIDUAL_CATEGORIES = new Set(['MAP_MINIMAP' /*, 'AGENT_PORTRAIT'*/]);
 /** グリッド画像で送るカテゴリ（RANK は25枚→1枚に圧縮） */
-const GRID_CATEGORIES = new Set(["RANK_GRID","AGENT_PORTRAIT_GRID"]);
+const GRID_CATEGORIES = new Set(['RANK_GRID', 'AGENT_PORTRAIT_GRID']);
 
 function buildCatalogs(): LabeledCatalogEntry[] {
   return [
-    ...getAllCatalogsLabeled().filter(c => INDIVIDUAL_CATEGORIES.has(c.category)),
-    ...getCatalogGrids().filter(g => GRID_CATEGORIES.has(g.category)),
+    ...getAllCatalogsLabeled().filter((c) => INDIVIDUAL_CATEGORIES.has(c.category)),
+    ...getCatalogGrids().filter((g) => GRID_CATEGORIES.has(g.category)),
   ];
 }
 
@@ -55,7 +61,7 @@ export async function analyzeThumbnailGemini(
 }
 
 /** Context Cache を利用したリクエスト（per-request 画像のみ送信） */
-async function analyzeThumbnailGeminiCached(
+async function _analyzeThumbnailGeminiCached(
   cacheName: string,
   imageData: ImageData,
   frames: FrameImageData[],
@@ -96,11 +102,17 @@ async function analyzeThumbnailGeminiInline(
   const url = `${GEMINI_BASE_URL}/${GEMINI_MODEL}:generateContent`;
   const body = {
     system_instruction: {
-      parts: [{ text: 'あなたはValorantのeスポーツアナリストです。最初にリファレンスカタログ画像が提供され、その後に分析対象の画像が続きます。' }],
+      parts: [
+        {
+          text: 'あなたはValorantのeスポーツアナリストです。最初にリファレンスカタログ画像が提供され、その後に分析対象の画像が続きます。',
+        },
+      ],
     },
-    contents: [{
-      parts: [...catalogParts, ...buildPerRequestParts(imageData, frames, title)],
-    }],
+    contents: [
+      {
+        parts: [...catalogParts, ...buildPerRequestParts(imageData, frames, title)],
+      },
+    ],
     generationConfig: buildGenerationConfig(),
   };
 
@@ -126,18 +138,20 @@ export async function analyzeThumbnailGemma(
 
   const url = `${GEMINI_BASE_URL}/${GEMMA_MODEL}:generateContent`;
   const body = {
-    contents: [{
-      parts: [
-        ...catalogParts,
-        ...buildPerRequestParts(imageData, frames, title),
-        {
-          text: `
+    contents: [
+      {
+        parts: [
+          ...catalogParts,
+          ...buildPerRequestParts(imageData, frames, title),
+          {
+            text: `
 分析対象の画像（サムネイルとプレイ中のフレーム）を、上記のカタロググリッド画像と比較して、マップ・エージェント・ランクを特定してください。
 重要: 結果は必ず以下のJSON形式でのみ出力してください。説明や装飾（\`\`\`json 等）は一切不要です。
-JSON Format: {"map": string|null, "agent": string|null, "rank": string|null, "coaching_type": "individual"|"team", "map_confidence": "high"|"medium"|"low", "agent_confidence": "high"|"medium"|"low", "rank_confidence": "high"|"medium"|"low", "reasoning": string}`
-        }
-      ],
-    }],
+JSON Format: {"map": string|null, "agent": string|null, "rank": string|null, "coaching_type": "individual"|"team", "map_confidence": "high"|"medium"|"low", "agent_confidence": "high"|"medium"|"low", "rank_confidence": "high"|"medium"|"low", "reasoning": string}`,
+          },
+        ],
+      },
+    ],
     generationConfig: { temperature: 0.1, maxOutputTokens: 8192 },
   };
 
@@ -156,8 +170,8 @@ export async function analyzeThumbnailGemmaStepwise(
   apiKey: string,
   title?: string,
 ): Promise<LLMExtractionResult | null> {
-  const minimapFrames = frames.filter(f => f.frameType === 'minimap');
-  const fullFrames = frames.filter(f => f.frameType === 'full');
+  const minimapFrames = frames.filter((f) => f.frameType === 'minimap');
+  const fullFrames = frames.filter((f) => f.frameType === 'full');
 
   const [mapResult, agentResult, rankResult] = await Promise.all([
     inferStepMap(minimapFrames, apiKey),
@@ -176,7 +190,8 @@ export async function analyzeThumbnailGemmaStepwise(
     agent_confidence: agentResult?.confidence ?? 'low',
     rank_confidence: rankResult?.confidence ?? 'low',
     reasoning: [mapResult?.reasoning, agentResult?.reasoning, rankResult?.reasoning]
-      .filter(Boolean).join(' | '),
+      .filter(Boolean)
+      .join(' | '),
   };
 }
 
@@ -187,16 +202,19 @@ interface StepResult {
   reasoning: string;
 }
 
-async function inferStepMap(minimapFrames: FrameImageData[], apiKey: string): Promise<StepResult | null> {
+async function inferStepMap(
+  minimapFrames: FrameImageData[],
+  apiKey: string,
+): Promise<StepResult | null> {
   const mapImages = getMapDisplayImages();
-  const parts: object[] = [
-    { text: 'マップミニマップカタログ（ゲーム左上表示と比較用）:' },
-  ];
+  const parts: object[] = [{ text: 'マップミニマップカタログ（ゲーム左上表示と比較用）:' }];
   for (const img of mapImages) {
     parts.push({ text: `${img.name}:` });
     parts.push({ inline_data: { mime_type: img.mediaType, data: img.base64 } });
   }
-  parts.push({ text: `[MINIMAP FRAMES] ゲームプレイ中のミニマップクロップ ${minimapFrames.length} 枚:` });
+  parts.push({
+    text: `[MINIMAP FRAMES] ゲームプレイ中のミニマップクロップ ${minimapFrames.length} 枚:`,
+  });
   for (const frame of minimapFrames) {
     parts.push({ text: `${Math.round(frame.position * 100)}%:` });
     parts.push({ inline_data: { mime_type: frame.mediaType, data: frame.base64 } });
@@ -254,11 +272,13 @@ value は以下から選択: ${MAP_LABELS.join(', ')}, または null`,
   return callGeminiStepApi(url, apiKey, body, 'map');
 }
 
-async function inferStepAgent(imageData: ImageData, apiKey: string, title?: string): Promise<StepResult | null> {
+async function inferStepAgent(
+  imageData: ImageData,
+  apiKey: string,
+  title?: string,
+): Promise<StepResult | null> {
   const agentImages = getAgentPortraitImages();
-  const parts: object[] = [
-    { text: 'エージェント全身像カタログ:' },
-  ];
+  const parts: object[] = [{ text: 'エージェント全身像カタログ:' }];
   for (const img of agentImages) {
     parts.push({ text: `${img.name}:` });
     parts.push({ inline_data: { mime_type: img.mediaType, data: img.base64 } });
@@ -282,11 +302,13 @@ value は以下から選択: ${AGENT_LABELS.join(', ')}, または null`,
   return callGeminiStepApi(url, apiKey, body, 'agent');
 }
 
-async function inferStepRank(imageData: ImageData, fullFrames: FrameImageData[], apiKey: string): Promise<StepResult | null> {
+async function inferStepRank(
+  imageData: ImageData,
+  fullFrames: FrameImageData[],
+  apiKey: string,
+): Promise<StepResult | null> {
   const rankImages = getRankCatalogImages();
-  const parts: object[] = [
-    { text: 'ランクアイコンカタログ（IRON_1〜RADIANT）:' },
-  ];
+  const parts: object[] = [{ text: 'ランクアイコンカタログ（IRON_1〜RADIANT）:' }];
   for (const img of rankImages) {
     parts.push({ text: `${img.name}:` });
     parts.push({ inline_data: { mime_type: img.mediaType, data: img.base64 } });
@@ -331,21 +353,28 @@ async function callGeminiStepApi(
       const errText = await res.text();
       throw new Error(`Gemma step[${step}] API error ${res.status}: ${errText}`);
     }
-    const data = await res.json() as GeminiResponse;
+    const data = (await res.json()) as GeminiResponse;
     const u = data.usageMetadata;
     if (u) {
-      console.log(`[thumbnailLLM/gemma-step/${step}] tokens: input=${u.promptTokenCount ?? '?'} output=${u.candidatesTokenCount ?? '?'} total=${u.totalTokenCount ?? '?'}`);
+      console.log(
+        `[thumbnailLLM/gemma-step/${step}] tokens: input=${u.promptTokenCount ?? '?'} output=${u.candidatesTokenCount ?? '?'} total=${u.totalTokenCount ?? '?'}`,
+      );
     }
-    const rawText = (data.candidates?.[0]?.content?.parts ?? []).map(p => p.text ?? '').join('');
+    const rawText = (data.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? '').join('');
     if (!rawText) return null;
-    const text = extractJsonBlock(rawText.replace(/```json\n?/, '').replace(/\n?```/, '').trim());
+    const text = extractJsonBlock(
+      rawText
+        .replace(/```json\n?/, '')
+        .replace(/\n?```/, '')
+        .trim(),
+    );
     const parseStepResult = (parsed: StepResult): StepResult => {
       const conf = parsed.confidence;
       const ct = parsed.coaching_type;
       return {
-        value: parsed.value === 'null' ? null : (parsed.value || null),
-        confidence: (conf === 'high' || conf === 'medium' || conf === 'low') ? conf : 'low',
-        coaching_type: (ct === 'individual' || ct === 'team') ? ct : undefined,
+        value: parsed.value === 'null' ? null : parsed.value || null,
+        confidence: conf === 'high' || conf === 'medium' || conf === 'low' ? conf : 'low',
+        coaching_type: ct === 'individual' || ct === 'team' ? ct : undefined,
         reasoning: parsed.reasoning ?? '',
       };
     };
@@ -356,7 +385,11 @@ async function callGeminiStepApi(
       try {
         return parseStepResult(JSON.parse(sanitized) as StepResult);
       } catch (err) {
-        console.error(`[thumbnailLLM/gemma-step/${step}] JSON parse error:`, err, rawText.slice(0, 200));
+        console.error(
+          `[thumbnailLLM/gemma-step/${step}] JSON parse error:`,
+          err,
+          rawText.slice(0, 200),
+        );
         return null;
       }
     }
@@ -400,7 +433,7 @@ export async function callGeminiApi(
       const errText = await res.text();
       throw new Error(`Gemini API error ${res.status}: ${errText}`);
     }
-    const data = await res.json() as GeminiResponse;
+    const data = (await res.json()) as GeminiResponse;
     const u = data.usageMetadata;
     if (u) {
       const parts = [
@@ -409,7 +442,9 @@ export async function callGeminiApi(
         u.thoughtsTokenCount ? `thinking=${u.thoughtsTokenCount}` : null,
         u.cachedContentTokenCount ? `cached=${u.cachedContentTokenCount}` : null,
         `total=${u.totalTokenCount ?? '?'}`,
-      ].filter(Boolean).join(' ');
+      ]
+        .filter(Boolean)
+        .join(' ');
       console.log(`[thumbnailLLM/gemini] tokens: ${parts}`);
     }
     const candidate = data.candidates?.[0];
@@ -419,14 +454,19 @@ export async function callGeminiApi(
     }
     // parts が複数に分割される場合があるため全て結合する
     const parts = candidate?.content?.parts ?? [];
-    const rawText = parts.map(p => p.text ?? '').join('');
+    const rawText = parts.map((p) => p.text ?? '').join('');
     if (!rawText) {
       console.warn('[thumbnailLLM/gemini] No text in candidates:', JSON.stringify(data));
       return null;
     }
 
     // JSONブロックの抽出（Gemmaなどの非JSONモード用）
-    let text = extractJsonBlock(rawText.replace(/```json\n?/, '').replace(/\n?```/, '').trim());
+    const text = extractJsonBlock(
+      rawText
+        .replace(/```json\n?/, '')
+        .replace(/\n?```/, '')
+        .trim(),
+    );
 
     try {
       return normalizeGeminiResult(JSON.parse(text) as LLMExtractionResult);
@@ -464,11 +504,13 @@ function buildPerRequestParts(
   parts.push({ text: '[THUMBNAIL] サムネイル画像（エージェント・ランク判定用）:' });
   parts.push({ inline_data: { mime_type: imageData.mediaType, data: imageData.base64 } });
 
-  const minimapFrames = frames.filter(f => f.frameType === 'minimap');
-  const fullFrames = frames.filter(f => f.frameType === 'full');
+  const minimapFrames = frames.filter((f) => f.frameType === 'minimap');
+  const fullFrames = frames.filter((f) => f.frameType === 'full');
 
   if (minimapFrames.length > 0) {
-    parts.push({ text: `[MINIMAP FRAMES] ミニマップクロップ ${minimapFrames.length} 枚（マップ判定用）:` });
+    parts.push({
+      text: `[MINIMAP FRAMES] ミニマップクロップ ${minimapFrames.length} 枚（マップ判定用）:`,
+    });
     for (const frame of minimapFrames) {
       parts.push({ text: `${Math.round(frame.position * 100)}%:` });
       parts.push({ inline_data: { mime_type: frame.mediaType, data: frame.base64 } });
@@ -476,7 +518,9 @@ function buildPerRequestParts(
   }
 
   if (fullFrames.length > 0) {
-    parts.push({ text: `[GAMEPLAY FRAMES] 全体フレーム ${fullFrames.length} 枚（HUD テキスト・エージェント・ランク判定用）:` });
+    parts.push({
+      text: `[GAMEPLAY FRAMES] 全体フレーム ${fullFrames.length} 枚（HUD テキスト・エージェント・ランク判定用）:`,
+    });
     for (const frame of fullFrames) {
       parts.push({ text: `${Math.round(frame.position * 100)}%:` });
       parts.push({ inline_data: { mime_type: frame.mediaType, data: frame.base64 } });
@@ -504,10 +548,19 @@ function buildGenerationConfig() {
         rank_confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
         reasoning: { type: 'string' },
       },
-      required: ['map', 'agent', 'rank', 'coaching_type', 'map_confidence', 'agent_confidence', 'rank_confidence', 'reasoning'],
+      required: [
+        'map',
+        'agent',
+        'rank',
+        'coaching_type',
+        'map_confidence',
+        'agent_confidence',
+        'rank_confidence',
+        'reasoning',
+      ],
     },
     temperature: 0.1,
-    maxOutputTokens: 8192,  // gemini-2.5-flash は thinking トークンも消費するため大きめに設定
+    maxOutputTokens: 8192, // gemini-2.5-flash は thinking トークンも消費するため大きめに設定
   };
 }
 
@@ -517,12 +570,21 @@ function extractJsonBlock(text: string): string {
   if (start === -1) return text;
   let depth = 0;
   let inString = false;
-  let escape = false;
+  let isEscaping = false;
   for (let i = start; i < text.length; i++) {
     const c = text[i]!;
-    if (escape) { escape = false; continue; }
-    if (c === '\\' && inString) { escape = true; continue; }
-    if (c === '"') { inString = !inString; continue; }
+    if (isEscaping) {
+      isEscaping = false;
+      continue;
+    }
+    if (c === '\\' && inString) {
+      isEscaping = true;
+      continue;
+    }
+    if (c === '"') {
+      inString = !inString;
+      continue;
+    }
     if (!inString) {
       if (c === '{') depth++;
       else if (c === '}' && --depth === 0) return text.slice(start, i + 1);
@@ -548,10 +610,15 @@ function sanitizeJsonStrings(text: string): string {
       } else if (c === '"') {
         result += c;
         inString = false;
-      } else if (c === '\n') { result += '\\n'; }
-      else if (c === '\r') { result += '\\r'; }
-      else if (c === '\t') { result += '\\t'; }
-      else { result += c; }
+      } else if (c === '\n') {
+        result += '\\n';
+      } else if (c === '\r') {
+        result += '\\r';
+      } else if (c === '\t') {
+        result += '\\t';
+      } else {
+        result += c;
+      }
     }
     i++;
   }
@@ -560,7 +627,7 @@ function sanitizeJsonStrings(text: string): string {
 
 function normalizeGeminiResult(raw: LLMExtractionResult): LLMExtractionResult {
   const validConf = (v: string): 'high' | 'medium' | 'low' =>
-    (v === 'high' || v === 'medium' || v === 'low') ? v : 'low';
+    v === 'high' || v === 'medium' || v === 'low' ? v : 'low';
   return {
     ...raw,
     map: raw.map === 'null' ? null : raw.map,

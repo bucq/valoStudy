@@ -1,8 +1,8 @@
-import type { LLMExtractionResult, LLMProvider } from './types';
-import { sampleGameplayFrames, type FrameImageData } from './frameSampler';
-import { fetchThumbnailAsBase64, type ThumbnailFetchFailReason } from './thumbnailShared';
-import { analyzeThumbnailGemini, analyzeThumbnailGemma, analyzeThumbnailGemmaStepwise } from './thumbnailGemini';
+import { type FrameImageData, sampleGameplayFrames } from './frameSampler';
 import { analyzeThumbnailAnthropic } from './thumbnailAnthropic';
+import { analyzeThumbnailGemini, analyzeThumbnailGemmaStepwise } from './thumbnailGemini';
+import { fetchThumbnailAsBase64, type ThumbnailFetchFailReason } from './thumbnailShared';
+import type { LLMExtractionResult, LLMProvider } from './types';
 
 type FrameSampler = (videoId: string) => Promise<FrameImageData[]>;
 

@@ -22,9 +22,15 @@ export async function fetchThumbnailAsBase64(videoId: string): Promise<{
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const res = await fetch(url);
-        if (!res.ok) { lastFailReason = 'not_found'; break; }
+        if (!res.ok) {
+          lastFailReason = 'not_found';
+          break;
+        }
         const buf = await res.arrayBuffer();
-        if (buf.byteLength < 5_000) { lastFailReason = 'placeholder'; break; }
+        if (buf.byteLength < 5_000) {
+          lastFailReason = 'placeholder';
+          break;
+        }
         return {
           imageData: {
             base64: arrayBufferToBase64(buf),
@@ -33,7 +39,7 @@ export async function fetchThumbnailAsBase64(videoId: string): Promise<{
         };
       } catch {
         lastFailReason = 'fetch_error';
-        if (attempt < 2) await new Promise(r => setTimeout(r, 200));
+        if (attempt < 2) await new Promise((r) => setTimeout(r, 200));
       }
     }
   }

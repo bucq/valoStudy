@@ -1,6 +1,6 @@
-import { Hono } from 'hono';
 import { COACH_CHANNEL_IDS } from '@public-api/services/coaches.js';
-import { collectVideos, searchCollect, type CollectEvent } from '../services/collector.js';
+import { Hono } from 'hono';
+import { type CollectEvent, collectVideos, searchCollect } from '../services/collector.js';
 
 export const collectRoute = new Hono();
 
@@ -19,7 +19,7 @@ function sseStream(handler: (send: (event: CollectEvent) => void) => Promise<voi
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
+      Connection: 'keep-alive',
     },
   });
 }
@@ -27,7 +27,7 @@ function sseStream(handler: (send: (event: CollectEvent) => void) => Promise<voi
 /** GET /api/collect/channels — チャンネル一覧 */
 collectRoute.get('/channels', (c) => {
   return c.json({
-    channels: COACH_CHANNEL_IDS.map(id => ({
+    channels: COACH_CHANNEL_IDS.map((id) => ({
       id,
       placeholder: id.startsWith('REPLACE_'),
     })),
@@ -37,7 +37,7 @@ collectRoute.get('/channels', (c) => {
 /** POST /api/collect/all — 全チャンネル収集（SSE） */
 collectRoute.post('/all', async (c) => {
   const body: { maxPerChannel?: number; dryRun?: boolean } = await c.req.json().catch(() => ({}));
-  const apiKey = process.env['YOUTUBE_API_KEY'] ?? '';
+  const apiKey = process.env.YOUTUBE_API_KEY ?? '';
   if (!apiKey) return c.json({ error: 'YOUTUBE_API_KEY not set' }, 500);
 
   return sseStream(async (send) => {
@@ -54,7 +54,7 @@ collectRoute.post('/all', async (c) => {
 collectRoute.post('/channel/:id', async (c) => {
   const channelId = c.req.param('id');
   const body: { maxResults?: number; dryRun?: boolean } = await c.req.json().catch(() => ({}));
-  const apiKey = process.env['YOUTUBE_API_KEY'] ?? '';
+  const apiKey = process.env.YOUTUBE_API_KEY ?? '';
   if (!apiKey) return c.json({ error: 'YOUTUBE_API_KEY not set' }, 500);
 
   return sseStream(async (send) => {
@@ -74,7 +74,7 @@ collectRoute.post('/search', async (c) => {
   const query = body.query?.trim();
   if (!query) return c.json({ error: 'query is required' }, 400);
 
-  const apiKey = process.env['YOUTUBE_API_KEY'] ?? '';
+  const apiKey = process.env.YOUTUBE_API_KEY ?? '';
   if (!apiKey) return c.json({ error: 'YOUTUBE_API_KEY not set' }, 500);
 
   return sseStream(async (send) => {

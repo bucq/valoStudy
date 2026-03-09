@@ -1,5 +1,5 @@
-import { MAP_ALIAS_MAP, AGENT_ALIAS_MAP, RANK_ALIAS_MAP, MAP_LABELS, AGENT_LABELS } from './valorant';
-import type { VideoMetadataExtraction, FieldExtraction } from './types';
+import type { FieldExtraction, VideoMetadataExtraction } from './types';
+import { AGENT_ALIAS_MAP, MAP_ALIAS_MAP, RANK_ALIAS_MAP } from './valorant';
 
 function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -19,43 +19,44 @@ export function isValorantCoachingVideo(title: string): boolean {
   const text = title.toLowerCase();
 
   // コーチング/教育系ワード
-  const coachingPatterns = [
-    /coaching/i,
-    /コーチング/,
-    /解説/,
-  ];
-  const hasCoachingKeyword = coachingPatterns.some(p => p.test(text));
+  const coachingPatterns = [/coaching/i, /コーチング/, /解説/];
+  const hasCoachingKeyword = coachingPatterns.some((p) => p.test(text));
   if (!hasCoachingKeyword) return false;
 
   // Valorantゲーム名キーワード
-  const gamePatterns = [
-    /valorant/i,
-    /\bvalo\b/i,
-    /ヴァロラント/,
-    /ヴァロ/,
-    /\bval\b/i,
-  ];
-  if (gamePatterns.some(p => p.test(text))) return true;
+  const gamePatterns = [/valorant/i, /\bvalo\b/i, /ヴァロラント/, /ヴァロ/, /\bval\b/i];
+  if (gamePatterns.some((p) => p.test(text))) return true;
 
   // Valorant固有のランク名（ゲーム名を省略したタイトル対応）
   const valoRankPatterns = [
-    /アイアン/, /ブロンズ/, /シルバー/, /ゴールド/, /プラチナ/,
-    /ダイヤ/, /アセンダント/, /イモータル/, /レディアント/,
-    /\biron\b/i, /\bbronze\b/i, /\bsilver\b/i, /\bgold\b/i,
-    /\bplatinum\b/i, /\bplat\b/i, /\bdiamond\b/i,
-    /\bascendant\b/i, /\bimmortal\b/i, /\bradiant\b/i,
+    /アイアン/,
+    /ブロンズ/,
+    /シルバー/,
+    /ゴールド/,
+    /プラチナ/,
+    /ダイヤ/,
+    /アセンダント/,
+    /イモータル/,
+    /レディアント/,
+    /\biron\b/i,
+    /\bbronze\b/i,
+    /\bsilver\b/i,
+    /\bgold\b/i,
+    /\bplatinum\b/i,
+    /\bplat\b/i,
+    /\bdiamond\b/i,
+    /\bascendant\b/i,
+    /\bimmortal\b/i,
+    /\bradiant\b/i,
   ];
-  return valoRankPatterns.some(p => p.test(text));
+  return valoRankPatterns.some((p) => p.test(text));
 }
 
 /**
  * テキストから単語境界マッチで最初にヒットした値を返す。
  * aliasMapのキーはすべてlowercase前提。
  */
-function matchFromAliasMap(
-  text: string,
-  aliasMap: Map<string, string>,
-): string | null {
+function matchFromAliasMap(text: string, aliasMap: Map<string, string>): string | null {
   for (const [alias, label] of aliasMap) {
     const pattern = new RegExp(`\\b${escapeRegex(alias)}\\b`, 'i');
     if (pattern.test(text)) return label;
@@ -84,7 +85,7 @@ export function detectCoachingType(title: string): 'individual' | 'team' {
     /クラン/,
     /練習試合/,
   ];
-  return teamPatterns.some(p => p.test(title)) ? 'team' : 'individual';
+  return teamPatterns.some((p) => p.test(title)) ? 'team' : 'individual';
 }
 
 /**
@@ -98,25 +99,28 @@ export function regexExtract(
   tags: string[],
 ): VideoMetadataExtraction {
   // 優先度順にテキストソースを結合
-  const primaryText   = [title, ...tags].join(' ');
+  const primaryText = [title, ...tags].join(' ');
   const secondaryText = description.slice(0, 500);
 
-  const mapLabel   = matchFromAliasMap(primaryText, MAP_ALIAS_MAP)
-                  ?? matchFromAliasMap(secondaryText, MAP_ALIAS_MAP);
-  const agentLabel = matchFromAliasMap(primaryText, AGENT_ALIAS_MAP)
-                  ?? matchFromAliasMap(secondaryText, AGENT_ALIAS_MAP);
-  const rankLabel  = matchFromAliasMap(primaryText, RANK_ALIAS_MAP)
-                  ?? matchFromAliasMap(secondaryText, RANK_ALIAS_MAP);
+  const mapLabel =
+    matchFromAliasMap(primaryText, MAP_ALIAS_MAP) ??
+    matchFromAliasMap(secondaryText, MAP_ALIAS_MAP);
+  const agentLabel =
+    matchFromAliasMap(primaryText, AGENT_ALIAS_MAP) ??
+    matchFromAliasMap(secondaryText, AGENT_ALIAS_MAP);
+  const rankLabel =
+    matchFromAliasMap(primaryText, RANK_ALIAS_MAP) ??
+    matchFromAliasMap(secondaryText, RANK_ALIAS_MAP);
 
   const makeField = (value: string | null): FieldExtraction => ({
     value,
     confidence: value !== null ? 'high' : 'none',
-    source:     'regex',
+    source: 'regex',
   });
 
   return {
-    map:   makeField(mapLabel),
+    map: makeField(mapLabel),
     agent: makeField(agentLabel),
-    rank:  makeField(rankLabel),
+    rank: makeField(rankLabel),
   };
 }

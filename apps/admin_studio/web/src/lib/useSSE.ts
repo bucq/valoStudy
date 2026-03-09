@@ -1,11 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 const BASE = 'http://localhost:3001';
 
 export function useSSE<T>() {
-  const [logs, setLogs]       = useState<T[]>([]);
+  const [logs, setLogs] = useState<T[]>([]);
   const [running, setRunning] = useState(false);
-  const [error, setError]     = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const start = useCallback((path: string, body: unknown) => {
     setLogs([]);
@@ -13,9 +13,9 @@ export function useSSE<T>() {
     setRunning(true);
 
     fetch(`${BASE}${path}`, {
-      method:  'POST',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(body),
+      body: JSON.stringify(body),
     })
       .then(async (res) => {
         if (!res.ok || !res.body) {
@@ -23,9 +23,9 @@ export function useSSE<T>() {
           throw new Error((err as { error?: string }).error ?? res.statusText);
         }
 
-        const reader  = res.body.getReader();
+        const reader = res.body.getReader();
         const decoder = new TextDecoder();
-        let buffer    = '';
+        let buffer = '';
 
         while (true) {
           const { done, value } = await reader.read();
@@ -38,8 +38,10 @@ export function useSSE<T>() {
             if (!line) continue;
             try {
               const event = JSON.parse(line) as T;
-              setLogs(prev => [...prev, event]);
-            } catch { /* ignore malformed */ }
+              setLogs((prev) => [...prev, event]);
+            } catch {
+              /* ignore malformed */
+            }
           }
         }
       })
@@ -49,7 +51,10 @@ export function useSSE<T>() {
       .finally(() => setRunning(false));
   }, []);
 
-  const clear = useCallback(() => { setLogs([]); setError(null); }, []);
+  const clear = useCallback(() => {
+    setLogs([]);
+    setError(null);
+  }, []);
 
   return { logs, running, error, start, clear };
 }

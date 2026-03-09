@@ -9,7 +9,7 @@
  *   - 例: https://www.youtube.com/@ChannelName → ページソース内 channelId
  */
 export const COACH_CHANNEL_IDS: string[] = [
-  'UC1eCIyuRC6llpr46tL5LS8w',  // tonbo
-  'UCYX2lGNvaS9LN2vkwJn7lEA',  // みっちー
+  'UC1eCIyuRC6llpr46tL5LS8w', // tonbo
+  'UCYX2lGNvaS9LN2vkwJn7lEA', // みっちー
   `UCXEW13qpntV7pacu0Kz-9yA"`, // マザー
 ];

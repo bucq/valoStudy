@@ -5,13 +5,13 @@
  * wrangler サブプロセス不要でDBに直接書き込む。
  */
 
-import { db } from '../db.js';
 import { videos } from '@public-api/db/schema.js';
-import { fetchChannelVideos, searchVideos } from '@public-api/services/youtube.js';
 import { COACH_CHANNEL_IDS } from '@public-api/services/coaches.js';
+import type { YouTubeVideoItem } from '@public-api/services/youtube.js';
+import { fetchChannelVideos, searchVideos } from '@public-api/services/youtube.js';
+import { db } from '../db.js';
 import { isValorantCoachingVideo, regexExtract } from '../extractors/regexExtractor.js';
 import { CONFIDENCE_FLOAT } from '../extractors/types.js';
-import type { YouTubeVideoItem } from '@public-api/services/youtube.js';
 
 export interface CollectEvent {
   type: 'channel_start' | 'channel_done' | 'video_collected' | 'video_filtered' | 'done' | 'error';
@@ -29,8 +29,8 @@ export interface CollectEvent {
 
 export interface CollectOptions {
   apiKey: string;
-  channelIds?: string[];   // 省略時は COACH_CHANNEL_IDS 全件
-  maxPerChannel?: number;  // 省略時は 9999（全件）
+  channelIds?: string[]; // 省略時は COACH_CHANNEL_IDS 全件
+  maxPerChannel?: number; // 省略時は 9999（全件）
   dryRun?: boolean;
   onEvent?: (event: CollectEvent) => void;
 }
@@ -77,7 +77,7 @@ export async function collectVideos(opts: CollectOptions): Promise<CollectResult
     }
 
     let channelCoaching = 0;
-    const insertRows: typeof videos.$inferInsert[] = [];
+    const insertRows: (typeof videos.$inferInsert)[] = [];
 
     for (const item of items) {
       const title = item.snippet.title;
@@ -102,7 +102,8 @@ export async function collectVideos(opts: CollectOptions): Promise<CollectResult
         item.snippet.thumbnails.maxres?.url ??
         item.snippet.thumbnails.high?.url ??
         item.snippet.thumbnails.medium?.url ??
-        item.snippet.thumbnails.default?.url ?? '';
+        item.snippet.thumbnails.default?.url ??
+        '';
 
       insertRows.push({
         id: item.id,
@@ -117,9 +118,12 @@ export async function collectVideos(opts: CollectOptions): Promise<CollectResult
         map: extraction.map.value,
         agent: extraction.agent.value,
         rank: extraction.rank.value,
-        mapConfidence: extraction.map.value !== null ? CONFIDENCE_FLOAT[extraction.map.confidence] : 0,
-        agentConfidence: extraction.agent.value !== null ? CONFIDENCE_FLOAT[extraction.agent.confidence] : 0,
-        rankConfidence: extraction.rank.value !== null ? CONFIDENCE_FLOAT[extraction.rank.confidence] : 0,
+        mapConfidence:
+          extraction.map.value !== null ? CONFIDENCE_FLOAT[extraction.map.confidence] : 0,
+        agentConfidence:
+          extraction.agent.value !== null ? CONFIDENCE_FLOAT[extraction.agent.confidence] : 0,
+        rankConfidence:
+          extraction.rank.value !== null ? CONFIDENCE_FLOAT[extraction.rank.confidence] : 0,
         mapSource: extraction.map.value !== null ? 'regex' : null,
         agentSource: extraction.agent.value !== null ? 'regex' : null,
         rankSource: extraction.rank.value !== null ? 'regex' : null,
@@ -145,7 +149,7 @@ export async function collectVideos(opts: CollectOptions): Promise<CollectResult
           .onConflictDoUpdate({
             target: videos.id,
             set: {
-              title: batch[0].title,   // SQLite の onConflict で個別に上書きできないため values から取る
+              title: batch[0].title, // SQLite の onConflict で個別に上書きできないため values から取る
               viewCount: batch[0].viewCount,
               syncedAt: now,
               updatedAt: now,
@@ -154,7 +158,13 @@ export async function collectVideos(opts: CollectOptions): Promise<CollectResult
       }
     }
 
-    emit({ type: 'channel_done', channelId, fetched: items.length, coaching: channelCoaching, filtered: items.length - channelCoaching });
+    emit({
+      type: 'channel_done',
+      channelId,
+      fetched: items.length,
+      coaching: channelCoaching,
+      filtered: items.length - channelCoaching,
+    });
   }
 
   emit({ type: 'done', total: totalCollected });
@@ -197,27 +207,46 @@ export async function searchCollect(opts: {
       item.snippet.thumbnails.maxres?.url ??
       item.snippet.thumbnails.high?.url ??
       item.snippet.thumbnails.medium?.url ??
-      item.snippet.thumbnails.default?.url ?? '';
+      item.snippet.thumbnails.default?.url ??
+      '';
 
-    await db.insert(videos).values({
-      id: item.id, title, description,
-      channelId: item.snippet.channelId, channelTitle: item.snippet.channelTitle,
-      publishedAt: item.snippet.publishedAt, thumbnailUrl,
-      duration: item.contentDetails.duration,
-      viewCount: parseInt(item.statistics.viewCount ?? '0', 10),
-      map: extraction.map.value, agent: extraction.agent.value, rank: extraction.rank.value,
-      mapConfidence: extraction.map.value !== null ? CONFIDENCE_FLOAT[extraction.map.confidence] : 0,
-      agentConfidence: extraction.agent.value !== null ? CONFIDENCE_FLOAT[extraction.agent.confidence] : 0,
-      rankConfidence: extraction.rank.value !== null ? CONFIDENCE_FLOAT[extraction.rank.confidence] : 0,
-      mapSource: extraction.map.value !== null ? 'regex' : null,
-      agentSource: extraction.agent.value !== null ? 'regex' : null,
-      rankSource: extraction.rank.value !== null ? 'regex' : null,
-      aiTaggingStatus: allExtracted ? 'skipped' : 'pending',
-      syncedAt: now, updatedAt: now,
-    }).onConflictDoUpdate({
-      target: videos.id,
-      set: { title, viewCount: parseInt(item.statistics.viewCount ?? '0', 10), syncedAt: now, updatedAt: now },
-    });
+    await db
+      .insert(videos)
+      .values({
+        id: item.id,
+        title,
+        description,
+        channelId: item.snippet.channelId,
+        channelTitle: item.snippet.channelTitle,
+        publishedAt: item.snippet.publishedAt,
+        thumbnailUrl,
+        duration: item.contentDetails.duration,
+        viewCount: parseInt(item.statistics.viewCount ?? '0', 10),
+        map: extraction.map.value,
+        agent: extraction.agent.value,
+        rank: extraction.rank.value,
+        mapConfidence:
+          extraction.map.value !== null ? CONFIDENCE_FLOAT[extraction.map.confidence] : 0,
+        agentConfidence:
+          extraction.agent.value !== null ? CONFIDENCE_FLOAT[extraction.agent.confidence] : 0,
+        rankConfidence:
+          extraction.rank.value !== null ? CONFIDENCE_FLOAT[extraction.rank.confidence] : 0,
+        mapSource: extraction.map.value !== null ? 'regex' : null,
+        agentSource: extraction.agent.value !== null ? 'regex' : null,
+        rankSource: extraction.rank.value !== null ? 'regex' : null,
+        aiTaggingStatus: allExtracted ? 'skipped' : 'pending',
+        syncedAt: now,
+        updatedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: videos.id,
+        set: {
+          title,
+          viewCount: parseInt(item.statistics.viewCount ?? '0', 10),
+          syncedAt: now,
+          updatedAt: now,
+        },
+      });
 
     upserted++;
     emit({ type: 'video_collected', videoId: item.id, title });

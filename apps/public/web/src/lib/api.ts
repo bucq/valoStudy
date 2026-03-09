@@ -1,58 +1,55 @@
 /** Hono API クライアント */
 
 export interface VideoItem {
-  id:           string;
-  title:        string;
+  id: string;
+  title: string;
   channelTitle: string;
-  publishedAt:  string;
+  publishedAt: string;
   thumbnailUrl: string;
-  duration:     string;
-  viewCount:    number;
-  map:          string | null;
-  agent:        string | null;
-  rank:         string | null;
+  duration: string;
+  viewCount: number;
+  map: string | null;
+  agent: string | null;
+  rank: string | null;
   coachingType: string;
-  mapConfidence:   number;
+  mapConfidence: number;
   agentConfidence: number;
-  rankConfidence:  number;
+  rankConfidence: number;
 }
 
 export interface VideosResponse {
   videos: VideoItem[];
-  total:  number;
-  page:   number;
-  limit:  number;
+  total: number;
+  page: number;
+  limit: number;
 }
 
 export interface FiltersResponse {
-  maps:    string[];
-  agents:  string[];
-  ranks:   string[];
+  maps: string[];
+  agents: string[];
+  ranks: string[];
   coaches: string[];
 }
 
 export interface VideoFilters {
-  map?:          string;
-  agent?:        string;
-  rank?:         string;
-  coach?:        string;
+  map?: string;
+  agent?: string;
+  rank?: string;
+  coach?: string;
   coachingType?: 'individual' | 'team';
-  page?:         number;
-  limit?:        number;
+  page?: number;
+  limit?: number;
 }
 
-export async function fetchVideos(
-  apiBase: string,
-  filters: VideoFilters,
-): Promise<VideosResponse> {
+export async function fetchVideos(apiBase: string, filters: VideoFilters): Promise<VideosResponse> {
   const params = new URLSearchParams();
-  if (filters.map)          params.set('map',          filters.map);
-  if (filters.agent)        params.set('agent',        filters.agent);
-  if (filters.rank)         params.set('rank',         filters.rank);
-  if (filters.coach)        params.set('coach',        filters.coach);
+  if (filters.map) params.set('map', filters.map);
+  if (filters.agent) params.set('agent', filters.agent);
+  if (filters.rank) params.set('rank', filters.rank);
+  if (filters.coach) params.set('coach', filters.coach);
   if (filters.coachingType) params.set('coachingType', filters.coachingType);
-  if (filters.page)         params.set('page',         String(filters.page));
-  if (filters.limit)        params.set('limit',        String(filters.limit));
+  if (filters.page) params.set('page', String(filters.page));
+  if (filters.limit) params.set('limit', String(filters.limit));
 
   const res = await fetch(`${apiBase}/api/videos?${params}`);
   if (!res.ok) throw new Error(`fetchVideos failed: ${res.status}`);
@@ -66,10 +63,10 @@ export async function fetchFilters(apiBase: string): Promise<FiltersResponse> {
 }
 
 export interface CorrectionPayload {
-  suggestedMap?:   string;
+  suggestedMap?: string;
   suggestedAgent?: string;
-  suggestedRank?:  string;
-  note?:           string;
+  suggestedRank?: string;
+  note?: string;
 }
 
 export interface CorrectionResponse {
@@ -84,9 +81,9 @@ export async function submitCorrection(
   payload: CorrectionPayload,
 ): Promise<CorrectionResponse> {
   const res = await fetch(`${apiBase}/api/videos/${videoId}/correction`, {
-    method:  'POST',
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify(payload),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error(`submitCorrection failed: ${res.status}`);
   return res.json() as Promise<CorrectionResponse>;

@@ -1,6 +1,6 @@
-import { Hono } from 'hono';
+import { and, eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, and } from 'drizzle-orm';
+import { Hono } from 'hono';
 import { tagCorrectionRequests } from '../db/schema';
 import type { Env } from '../index';
 
@@ -28,10 +28,7 @@ correctionsRoute.get('/', async (c) => {
     .select()
     .from(tagCorrectionRequests)
     .where(
-      and(
-        eq(tagCorrectionRequests.videoId, videoId),
-        eq(tagCorrectionRequests.status, 'pending'),
-      ),
+      and(eq(tagCorrectionRequests.videoId, videoId), eq(tagCorrectionRequests.status, 'pending')),
     );
 
   return c.json({ corrections: rows });
@@ -48,10 +45,7 @@ correctionsRoute.patch('/resolve-by-video/:videoId', async (c) => {
     .update(tagCorrectionRequests)
     .set({ status: newStatus })
     .where(
-      and(
-        eq(tagCorrectionRequests.videoId, videoId),
-        eq(tagCorrectionRequests.status, 'pending'),
-      ),
+      and(eq(tagCorrectionRequests.videoId, videoId), eq(tagCorrectionRequests.status, 'pending')),
     );
 
   return c.json({ ok: true, videoId, status: newStatus });

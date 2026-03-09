@@ -1,7 +1,7 @@
-import { Hono } from 'hono';
-import { eq, desc } from 'drizzle-orm';
-import { db } from '../db.js';
 import { videos } from '@public-api/db/schema.js';
+import { desc, eq } from 'drizzle-orm';
+import { Hono } from 'hono';
+import { db } from '../db.js';
 
 export const reviewRoute = new Hono();
 
@@ -48,7 +48,12 @@ reviewRoute.patch('/:id/correct', async (c) => {
   const id = c.req.param('id');
   const now = new Date().toISOString();
 
-  let body: { map?: string | null; agent?: string | null; rank?: string | null; coachingType?: string };
+  let body: {
+    map?: string | null;
+    agent?: string | null;
+    rank?: string | null;
+    coachingType?: string;
+  };
   try {
     body = await c.req.json();
   } catch {
@@ -58,22 +63,22 @@ reviewRoute.patch('/:id/correct', async (c) => {
   const update: Record<string, unknown> = { reviewNeeded: 0, updatedAt: now };
 
   if ('map' in body) {
-    update['map'] = body.map ?? null;
-    update['mapSource'] = body.map != null ? 'manual' : null;
-    update['mapConfidence'] = body.map != null ? 1.0 : 0;
+    update.map = body.map ?? null;
+    update.mapSource = body.map != null ? 'manual' : null;
+    update.mapConfidence = body.map != null ? 1.0 : 0;
   }
   if ('agent' in body) {
-    update['agent'] = body.agent ?? null;
-    update['agentSource'] = body.agent != null ? 'manual' : null;
-    update['agentConfidence'] = body.agent != null ? 1.0 : 0;
+    update.agent = body.agent ?? null;
+    update.agentSource = body.agent != null ? 'manual' : null;
+    update.agentConfidence = body.agent != null ? 1.0 : 0;
   }
   if ('rank' in body) {
-    update['rank'] = body.rank ?? null;
-    update['rankSource'] = body.rank != null ? 'manual' : null;
-    update['rankConfidence'] = body.rank != null ? 1.0 : 0;
+    update.rank = body.rank ?? null;
+    update.rankSource = body.rank != null ? 'manual' : null;
+    update.rankConfidence = body.rank != null ? 1.0 : 0;
   }
   if ('coachingType' in body && body.coachingType != null) {
-    update['coachingType'] = body.coachingType;
+    update.coachingType = body.coachingType;
   }
 
   await db.update(videos).set(update).where(eq(videos.id, id));
@@ -83,20 +88,29 @@ reviewRoute.patch('/:id/correct', async (c) => {
 /** POST /api/review/:id/reject — 偽陽性として非表示 */
 reviewRoute.post('/:id/reject', async (c) => {
   const id = c.req.param('id');
-  await db.update(videos).set({ isValorantCoaching: 0, reviewNeeded: 0, updatedAt: new Date().toISOString() }).where(eq(videos.id, id));
+  await db
+    .update(videos)
+    .set({ isValorantCoaching: 0, reviewNeeded: 0, updatedAt: new Date().toISOString() })
+    .where(eq(videos.id, id));
   return c.json({ status: 'rejected', id });
 });
 
 /** POST /api/review/:id/restore — 非表示を復元 */
 reviewRoute.post('/:id/restore', async (c) => {
   const id = c.req.param('id');
-  await db.update(videos).set({ isValorantCoaching: 1, updatedAt: new Date().toISOString() }).where(eq(videos.id, id));
+  await db
+    .update(videos)
+    .set({ isValorantCoaching: 1, updatedAt: new Date().toISOString() })
+    .where(eq(videos.id, id));
   return c.json({ status: 'restored', id });
 });
 
 /** POST /api/review/:id/approve — reviewNeeded=0 にするだけ（値変更なし） */
 reviewRoute.post('/:id/approve', async (c) => {
   const id = c.req.param('id');
-  await db.update(videos).set({ reviewNeeded: 0, updatedAt: new Date().toISOString() }).where(eq(videos.id, id));
+  await db
+    .update(videos)
+    .set({ reviewNeeded: 0, updatedAt: new Date().toISOString() })
+    .where(eq(videos.id, id));
   return c.json({ status: 'approved', id });
 });

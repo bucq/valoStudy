@@ -1,8 +1,8 @@
-import { MAP_LABELS, AGENT_LABELS, RANK_LABELS } from './valorant';
-import type { LLMExtractionResult } from './types';
 import { getAllCatalogsLabeled } from './catalogLoader';
 import type { FrameImageData } from './frameSampler';
-import { type ImageData, buildAnalysisPrompt } from './thumbnailShared';
+import { buildAnalysisPrompt, type ImageData } from './thumbnailShared';
+import type { LLMExtractionResult } from './types';
+import { AGENT_LABELS, MAP_LABELS, RANK_LABELS } from './valorant';
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
@@ -36,10 +36,12 @@ export async function analyzeThumbnailAnthropic(
     max_tokens: 1024,
     tools: [buildAnthropicTool()],
     tool_choice: { type: 'tool', name: 'extract_valorant_metadata' },
-    messages: [{
-      role: 'user',
-      content: [...catalogContent, ...buildPerRequestContent(imageData, frames, title)],
-    }],
+    messages: [
+      {
+        role: 'user',
+        content: [...catalogContent, ...buildPerRequestContent(imageData, frames, title)],
+      },
+    ],
   };
 
   try {
@@ -57,11 +59,11 @@ export async function analyzeThumbnailAnthropic(
       console.error(`[thumbnailLLM/anthropic] ${res.status}: ${errText}`);
       throw new Error(`Anthropic API error ${res.status}: ${errText}`);
     }
-    const data = await res.json() as {
+    const data = (await res.json()) as {
       content: Array<{ type: string; name?: string; input?: LLMExtractionResult }>;
     };
     const toolUse = data.content.find(
-      b => b.type === 'tool_use' && b.name === 'extract_valorant_metadata',
+      (b) => b.type === 'tool_use' && b.name === 'extract_valorant_metadata',
     );
     return toolUse?.input ?? null;
   } catch (err) {
@@ -95,7 +97,10 @@ function buildPerRequestContent(
       text: `[GAMEPLAY FRAMES] ゲームプレイフレーム ${frames.length} 枚（マップ判定用）:`,
     });
     for (const frame of frames) {
-      content.push({ type: 'text', text: `フレーム（動画内 ${Math.round(frame.position * 100)}% 地点）:` });
+      content.push({
+        type: 'text',
+        text: `フレーム（動画内 ${Math.round(frame.position * 100)}% 地点）:`,
+      });
       content.push({
         type: 'image',
         source: { type: 'base64', media_type: frame.mediaType, data: frame.base64 },
@@ -112,19 +117,43 @@ function buildPerRequestContent(
 function buildAnthropicTool() {
   return {
     name: 'extract_valorant_metadata',
-    description: 'Extract Valorant game metadata from the thumbnail and gameplay frames. Evaluate each field independently.',
+    description:
+      'Extract Valorant game metadata from the thumbnail and gameplay frames. Evaluate each field independently.',
     input_schema: {
       type: 'object',
       properties: {
         map: { type: ['string', 'null'], enum: [...MAP_LABELS, null] },
         agent: { type: ['string', 'null'], enum: [...AGENT_LABELS, null] },
         rank: { type: ['string', 'null'], enum: [...RANK_LABELS, null] },
-        map_confidence: { type: 'string', enum: ['high', 'medium', 'low'], description: 'Confidence for map field only.' },
-        agent_confidence: { type: 'string', enum: ['high', 'medium', 'low'], description: 'Confidence for agent field only.' },
-        rank_confidence: { type: 'string', enum: ['high', 'medium', 'low'], description: 'Confidence for rank field only.' },
-        reasoning: { type: 'string', description: 'Brief explanation of visual cues used for each field.' },
+        map_confidence: {
+          type: 'string',
+          enum: ['high', 'medium', 'low'],
+          description: 'Confidence for map field only.',
+        },
+        agent_confidence: {
+          type: 'string',
+          enum: ['high', 'medium', 'low'],
+          description: 'Confidence for agent field only.',
+        },
+        rank_confidence: {
+          type: 'string',
+          enum: ['high', 'medium', 'low'],
+          description: 'Confidence for rank field only.',
+        },
+        reasoning: {
+          type: 'string',
+          description: 'Brief explanation of visual cues used for each field.',
+        },
       },
-      required: ['map', 'agent', 'rank', 'map_confidence', 'agent_confidence', 'rank_confidence', 'reasoning'],
+      required: [
+        'map',
+        'agent',
+        'rank',
+        'map_confidence',
+        'agent_confidence',
+        'rank_confidence',
+        'reasoning',
+      ],
     },
   };
 }

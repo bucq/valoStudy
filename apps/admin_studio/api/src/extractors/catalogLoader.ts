@@ -117,9 +117,6 @@ export function getCatalogGrids(): LabeledCatalogEntry[] {
 
 // ── 内部ヘルパー ──────────────────────────────────────────────────────────────
 
-function toEntries(
-  map: Record<string, string>,
-  mediaType: string,
-): CatalogEntry[] {
+function toEntries(map: Record<string, string>, mediaType: string): CatalogEntry[] {
   return Object.entries(map).map(([name, base64]) => ({ name, base64, mediaType }));
 }

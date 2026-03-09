@@ -21,18 +21,21 @@ export default function VideoPlayer({ videoId, onClose }: Props) {
   return (
     <div
       className="player-backdrop"
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div className="player-container">
         {/* 閉じるボタン */}
-        <button
-          className="player-close"
-          onClick={onClose}
-          aria-label="Close player"
-        >
+        <button className="player-close" onClick={onClose} aria-label="Close player">
           <span>ESC</span>
           <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
-            <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            <path
+              d="M1 1l10 10M11 1L1 11"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
           </svg>
         </button>
 
@@ -54,34 +57,44 @@ export default function VideoPlayer({ videoId, onClose }: Props) {
         </div>
 
         {/* 下部ラベル */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          marginTop: '16px',
-          gap: '8px',
-          alignItems: 'center',
-        }}>
-          <div style={{
-            width: '4px', height: '4px',
-            borderRadius: '50%',
-            background: 'var(--c-red)',
-            boxShadow: '0 0 6px var(--c-red)',
-          }} />
-          <span style={{
-            fontFamily: "'Rajdhani', sans-serif",
-            fontSize: '11px',
-            letterSpacing: '0.15em',
-            textTransform: 'uppercase',
-            color: 'var(--c-muted)',
-          }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            marginTop: '16px',
+            gap: '8px',
+            alignItems: 'center',
+          }}
+        >
+          <div
+            style={{
+              width: '4px',
+              height: '4px',
+              borderRadius: '50%',
+              background: 'var(--c-red)',
+              boxShadow: '0 0 6px var(--c-red)',
+            }}
+          />
+          <span
+            style={{
+              fontFamily: "'Rajdhani', sans-serif",
+              fontSize: '11px',
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              color: 'var(--c-muted)',
+            }}
+          >
             CLICK OUTSIDE OR PRESS ESC TO CLOSE
           </span>
-          <div style={{
-            width: '4px', height: '4px',
-            borderRadius: '50%',
-            background: 'var(--c-red)',
-            boxShadow: '0 0 6px var(--c-red)',
-          }} />
+          <div
+            style={{
+              width: '4px',
+              height: '4px',
+              borderRadius: '50%',
+              background: 'var(--c-red)',
+              boxShadow: '0 0 6px var(--c-red)',
+            }}
+          />
         </div>
       </div>
     </div>

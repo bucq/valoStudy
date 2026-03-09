@@ -1,58 +1,59 @@
-import { Hono } from 'hono';
-import { eq, and, desc, sql, inArray, like } from 'drizzle-orm';
-import { db } from '../db.js';
 import { videos } from '@public-api/db/schema.js';
+import { and, desc, eq, like, sql } from 'drizzle-orm';
+import { Hono } from 'hono';
+import { db } from '../db.js';
 
 export const videosRoute = new Hono();
 
 /** GET /api/videos — フィルタ付き一覧 */
 videosRoute.get('/', async (c) => {
   const q = c.req.query();
-  const page = Math.max(parseInt(q['page'] ?? '1', 10), 1);
-  const limit = Math.min(parseInt(q['limit'] ?? '50', 10), 200);
+  const page = Math.max(parseInt(q.page ?? '1', 10), 1);
+  const limit = Math.min(parseInt(q.limit ?? '50', 10), 200);
   const offset = (page - 1) * limit;
 
   const conditions = [];
-  if (q['map']) conditions.push(eq(videos.map, q['map']));
-  if (q['agent']) conditions.push(eq(videos.agent, q['agent']));
-  if (q['rank']) conditions.push(eq(videos.rank, q['rank']));
-  if (q['coach']) conditions.push(eq(videos.channelTitle, q['coach']));
-  if (q['status']) conditions.push(eq(videos.aiTaggingStatus, q['status']));
-  if (q['review']) conditions.push(eq(videos.reviewNeeded, parseInt(q['review'], 10)));
-  if (q['coaching'] !== undefined) {
-    conditions.push(eq(videos.isValorantCoaching, parseInt(q['coaching'], 10)));
+  if (q.map) conditions.push(eq(videos.map, q.map));
+  if (q.agent) conditions.push(eq(videos.agent, q.agent));
+  if (q.rank) conditions.push(eq(videos.rank, q.rank));
+  if (q.coach) conditions.push(eq(videos.channelTitle, q.coach));
+  if (q.status) conditions.push(eq(videos.aiTaggingStatus, q.status));
+  if (q.review) conditions.push(eq(videos.reviewNeeded, parseInt(q.review, 10)));
+  if (q.coaching !== undefined) {
+    conditions.push(eq(videos.isValorantCoaching, parseInt(q.coaching, 10)));
   }
-  if (q['coachingType']) conditions.push(eq(videos.coachingType, q['coachingType']));
-  if (q['q']) {
-    conditions.push(like(videos.title, `%${q['q']}%`));
+  if (q.coachingType) conditions.push(eq(videos.coachingType, q.coachingType));
+  if (q.q) {
+    conditions.push(like(videos.title, `%${q.q}%`));
   }
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
   const [rows, countResult] = await Promise.all([
-    db.select({
-      id: videos.id,
-      title: videos.title,
-      channelTitle: videos.channelTitle,
-      publishedAt: videos.publishedAt,
-      thumbnailUrl: videos.thumbnailUrl,
-      duration: videos.duration,
-      viewCount: videos.viewCount,
-      map: videos.map,
-      agent: videos.agent,
-      rank: videos.rank,
-      mapConfidence: videos.mapConfidence,
-      agentConfidence: videos.agentConfidence,
-      rankConfidence: videos.rankConfidence,
-      mapSource: videos.mapSource,
-      agentSource: videos.agentSource,
-      rankSource: videos.rankSource,
-      coachingType: videos.coachingType,
-      aiTaggingStatus: videos.aiTaggingStatus,
-      reviewNeeded: videos.reviewNeeded,
-      isValorantCoaching: videos.isValorantCoaching,
-      aiTaggedAt: videos.aiTaggedAt,
-    })
+    db
+      .select({
+        id: videos.id,
+        title: videos.title,
+        channelTitle: videos.channelTitle,
+        publishedAt: videos.publishedAt,
+        thumbnailUrl: videos.thumbnailUrl,
+        duration: videos.duration,
+        viewCount: videos.viewCount,
+        map: videos.map,
+        agent: videos.agent,
+        rank: videos.rank,
+        mapConfidence: videos.mapConfidence,
+        agentConfidence: videos.agentConfidence,
+        rankConfidence: videos.rankConfidence,
+        mapSource: videos.mapSource,
+        agentSource: videos.agentSource,
+        rankSource: videos.rankSource,
+        coachingType: videos.coachingType,
+        aiTaggingStatus: videos.aiTaggingStatus,
+        reviewNeeded: videos.reviewNeeded,
+        isValorantCoaching: videos.isValorantCoaching,
+        aiTaggedAt: videos.aiTaggedAt,
+      })
       .from(videos)
       .where(where)
       .orderBy(desc(videos.publishedAt))
@@ -79,7 +80,10 @@ videosRoute.get('/stats', async (c) => {
 
   const [total, coaching, reviewNeeded] = await Promise.all([
     db.select({ count: sql<number>`count(*)` }).from(videos),
-    db.select({ count: sql<number>`count(*)` }).from(videos).where(eq(videos.isValorantCoaching, 0)),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(videos)
+      .where(eq(videos.isValorantCoaching, 0)),
     db.select({ count: sql<number>`count(*)` }).from(videos).where(eq(videos.reviewNeeded, 1)),
   ]);
 
@@ -88,11 +92,11 @@ videosRoute.get('/stats', async (c) => {
     rejected: coaching[0]?.count ?? 0,
     reviewNeeded: reviewNeeded[0]?.count ?? 0,
     byStatus: {
-      pending: stats['pending'] ?? 0,
-      in_progress: stats['in_progress'] ?? 0,
-      complete: stats['complete'] ?? 0,
-      skipped: stats['skipped'] ?? 0,
-      failed: stats['failed'] ?? 0,
+      pending: stats.pending ?? 0,
+      in_progress: stats.in_progress ?? 0,
+      complete: stats.complete ?? 0,
+      skipped: stats.skipped ?? 0,
+      failed: stats.failed ?? 0,
     },
   });
 });
@@ -103,7 +107,7 @@ videosRoute.get('/channels', async (c) => {
     .selectDistinct({ channelTitle: videos.channelTitle })
     .from(videos)
     .orderBy(videos.channelTitle);
-  return c.json(rows.map(r => r.channelTitle).filter(Boolean));
+  return c.json(rows.map((r) => r.channelTitle).filter(Boolean));
 });
 
 /** GET /api/videos/:id — 単体詳細 */

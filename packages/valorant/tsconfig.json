@@ -6,14 +6,8 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "esModuleInterop": true,
     "skipLibCheck": true,
-    "outDir": "./dist",
-    "baseUrl": ".",
-    "paths": {
-      "@public-api/*": ["../../public/api/src/*"]
-    },
-    "types": ["node"]
+    "noEmit": true
   },
-  "include": ["src/**/*.ts", "test-llm.ts"]
+  "include": ["src/**/*.ts"]
 }

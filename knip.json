@@ -1,0 +1,25 @@
+{
+  "workspaces": {
+    "apps/public/api": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "apps/admin_studio/api": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": ["tsx"]
+    },
+    "apps/public/web": {
+      "entry": ["src/pages/**/*.astro", "src/pages/**/*.ts"],
+      "project": ["src/**/*.{ts,tsx,astro}"]
+    },
+    "apps/admin_studio/web": {
+      "entry": ["src/main.tsx"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/valorant": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    }
+  }
+}

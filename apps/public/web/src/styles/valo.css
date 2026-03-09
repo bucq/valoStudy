@@ -1,61 +1,91 @@
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap");
 
 /* ── Design Tokens ────────────────────────────────────────────────── */
 :root {
-  --c-bg:         #0F1923;
-  --c-surface:    #162030;
-  --c-surface-2:  #1E2E40;
-  --c-border:     #2A3F54;
-  --c-border-dim: #1E2E3E;
-  --c-red:        #FF4655;
-  --c-red-glow:   rgba(255, 70, 85, 0.25);
-  --c-red-dim:    rgba(255, 70, 85, 0.08);
-  --c-blue:       #49A5E5;
-  --c-text:       #ECE8E1;
-  --c-muted:      #7A8FA0;
-  --c-faint:      #3A5068;
+  --c-bg: #0f1923;
+  --c-surface: #162030;
+  --c-surface-2: #1e2e40;
+  --c-border: #2a3f54;
+  --c-border-dim: #1e2e3e;
+  --c-red: #ff4655;
+  --c-red-glow: rgba(255, 70, 85, 0.25);
+  --c-red-dim: rgba(255, 70, 85, 0.08);
+  --c-blue: #49a5e5;
+  --c-text: #ece8e1;
+  --c-muted: #7a8fa0;
+  --c-faint: #3a5068;
 
   /* Rank colors — game-accurate */
-  --rank-iron:       #8C9196;
-  --rank-bronze:     #A87247;
-  --rank-silver:     #AABAC7;
-  --rank-gold:       #E8C84A;
-  --rank-platinum:   #4CBFBA;
-  --rank-diamond:    #45AAD9;
-  --rank-ascendant:  #2DC97E;
-  --rank-immortal:   #BB2538;
-  --rank-radiant:    #F5E172;
+  --rank-iron: #8c9196;
+  --rank-bronze: #a87247;
+  --rank-silver: #aabac7;
+  --rank-gold: #e8c84a;
+  --rank-platinum: #4cbfba;
+  --rank-diamond: #45aad9;
+  --rank-ascendant: #2dc97e;
+  --rank-immortal: #bb2538;
+  --rank-radiant: #f5e172;
 }
 
 /* ── Global Reset ─────────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+}
 
 body {
   background-color: var(--c-bg);
   color: var(--c-text);
-  font-family: 'Barlow', sans-serif;
+  font-family: "Barlow", sans-serif;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   /* Subtle dot grid */
   background-image:
-    radial-gradient(circle, rgba(255,70,85,0.06) 1px, transparent 1px),
-    radial-gradient(circle, rgba(73,165,229,0.03) 1px, transparent 1px);
-  background-size: 36px 36px, 72px 72px;
-  background-position: 0 0, 18px 18px;
+    radial-gradient(circle, rgba(255, 70, 85, 0.06) 1px, transparent 1px),
+    radial-gradient(circle, rgba(73, 165, 229, 0.03) 1px, transparent 1px);
+  background-size:
+    36px 36px,
+    72px 72px;
+  background-position:
+    0 0,
+    18px 18px;
 }
 
 /* ── Typography ───────────────────────────────────────────────────── */
-.font-rajdhani { font-family: 'Rajdhani', sans-serif; }
-.font-mono     { font-family: 'JetBrains Mono', monospace; }
-.font-condensed{ font-family: 'Barlow Condensed', sans-serif; }
+.font-rajdhani {
+  font-family: "Rajdhani", sans-serif;
+}
+.font-mono {
+  font-family: "JetBrains Mono", monospace;
+}
+.font-condensed {
+  font-family: "Barlow Condensed", sans-serif;
+}
 
 /* ── Valorant Clip-path ───────────────────────────────────────────── */
-.clip-br { clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
-.clip-tl { clip-path: polygon(14px 0, 100% 0, 100% 100%, 0 100%, 0 14px); }
+.clip-br {
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+}
+.clip-tl {
+  clip-path: polygon(14px 0, 100% 0, 100% 100%, 0 100%, 0 14px);
+}
 .clip-both {
-  clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, calc(100% - 14px) 100%, 0 100%, 0 14px);
+  clip-path: polygon(
+    14px 0,
+    calc(100% - 14px) 0,
+    100% 14px,
+    100% 100%,
+    calc(100% - 14px) 100%,
+    0 100%,
+    0 14px
+  );
 }
 
 /* ── Video Card ───────────────────────────────────────────────────── */
@@ -64,14 +94,17 @@ body {
   background: var(--c-surface);
   border: 1px solid var(--c-border-dim);
   clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%);
-  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    transform 0.2s,
+    box-shadow 0.2s;
   cursor: pointer;
   text-align: left;
   width: 100%;
   overflow: hidden;
 }
 .valo-card::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border: 1px solid transparent;
@@ -82,7 +115,9 @@ body {
 .valo-card:hover {
   border-color: var(--c-red);
   transform: translateY(-3px);
-  box-shadow: 0 8px 32px rgba(255, 70, 85, 0.2), 0 0 0 1px rgba(255,70,85,0.3);
+  box-shadow:
+    0 8px 32px rgba(255, 70, 85, 0.2),
+    0 0 0 1px rgba(255, 70, 85, 0.3);
 }
 .valo-card:hover::after {
   border-color: var(--c-red);
@@ -106,9 +141,17 @@ body {
   animation: scan-sweep 0.5s ease-out forwards;
 }
 @keyframes scan-sweep {
-  0%   { transform: translateY(-2px); opacity: 1; }
-  70%  { opacity: 0.8; }
-  100% { transform: translateY(calc(100vh)); opacity: 0; }
+  0% {
+    transform: translateY(-2px);
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(calc(100vh));
+    opacity: 0;
+  }
 }
 
 /* Corner accent — top right diagonal cut decoration */
@@ -130,7 +173,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-family: 'Rajdhani', sans-serif;
+  font-family: "Rajdhani", sans-serif;
   font-weight: 700;
   font-size: 10px;
   letter-spacing: 0.06em;
@@ -138,27 +181,63 @@ body {
   padding: 2px 8px 2px 6px;
   clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
 }
-.rank-iron       { background: rgba(140,145,150,0.2); color: var(--rank-iron);      border-left: 2px solid var(--rank-iron); }
-.rank-bronze     { background: rgba(168,114, 71,0.2); color: var(--rank-bronze);    border-left: 2px solid var(--rank-bronze); }
-.rank-silver     { background: rgba(170,186,199,0.2); color: var(--rank-silver);    border-left: 2px solid var(--rank-silver); }
-.rank-gold       { background: rgba(232,200, 74,0.2); color: var(--rank-gold);      border-left: 2px solid var(--rank-gold); }
-.rank-platinum   { background: rgba( 76,191,186,0.2); color: var(--rank-platinum);  border-left: 2px solid var(--rank-platinum); }
-.rank-diamond    { background: rgba( 69,170,217,0.2); color: var(--rank-diamond);   border-left: 2px solid var(--rank-diamond); }
-.rank-ascendant  { background: rgba( 45,201,126,0.2); color: var(--rank-ascendant); border-left: 2px solid var(--rank-ascendant); }
-.rank-immortal   { background: rgba(187, 37, 56,0.25); color: var(--rank-immortal); border-left: 2px solid var(--rank-immortal); }
-.rank-radiant    { background: rgba(245,225,114,0.15); color: var(--rank-radiant);  border-left: 2px solid var(--rank-radiant);
-                   box-shadow: 0 0 8px rgba(245,225,114,0.3); }
+.rank-iron {
+  background: rgba(140, 145, 150, 0.2);
+  color: var(--rank-iron);
+  border-left: 2px solid var(--rank-iron);
+}
+.rank-bronze {
+  background: rgba(168, 114, 71, 0.2);
+  color: var(--rank-bronze);
+  border-left: 2px solid var(--rank-bronze);
+}
+.rank-silver {
+  background: rgba(170, 186, 199, 0.2);
+  color: var(--rank-silver);
+  border-left: 2px solid var(--rank-silver);
+}
+.rank-gold {
+  background: rgba(232, 200, 74, 0.2);
+  color: var(--rank-gold);
+  border-left: 2px solid var(--rank-gold);
+}
+.rank-platinum {
+  background: rgba(76, 191, 186, 0.2);
+  color: var(--rank-platinum);
+  border-left: 2px solid var(--rank-platinum);
+}
+.rank-diamond {
+  background: rgba(69, 170, 217, 0.2);
+  color: var(--rank-diamond);
+  border-left: 2px solid var(--rank-diamond);
+}
+.rank-ascendant {
+  background: rgba(45, 201, 126, 0.2);
+  color: var(--rank-ascendant);
+  border-left: 2px solid var(--rank-ascendant);
+}
+.rank-immortal {
+  background: rgba(187, 37, 56, 0.25);
+  color: var(--rank-immortal);
+  border-left: 2px solid var(--rank-immortal);
+}
+.rank-radiant {
+  background: rgba(245, 225, 114, 0.15);
+  color: var(--rank-radiant);
+  border-left: 2px solid var(--rank-radiant);
+  box-shadow: 0 0 8px rgba(245, 225, 114, 0.3);
+}
 
 .map-badge {
   display: inline-flex;
   align-items: center;
-  font-family: 'Rajdhani', sans-serif;
+  font-family: "Rajdhani", sans-serif;
   font-weight: 600;
   font-size: 10px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 2px 8px 2px 6px;
-  background: rgba(255,70,85,0.1);
+  background: rgba(255, 70, 85, 0.1);
   color: var(--c-red);
   border-left: 2px solid var(--c-red);
   clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
@@ -167,13 +246,13 @@ body {
 .agent-badge {
   display: inline-flex;
   align-items: center;
-  font-family: 'Rajdhani', sans-serif;
+  font-family: "Rajdhani", sans-serif;
   font-weight: 600;
   font-size: 10px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 2px 8px 2px 6px;
-  background: rgba(73,165,229,0.1);
+  background: rgba(73, 165, 229, 0.1);
   color: var(--c-blue);
   border-left: 2px solid var(--c-blue);
   clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
@@ -187,9 +266,11 @@ body {
   overflow: hidden;
 }
 .filter-wrap::before {
-  content: '';
+  content: "";
   position: absolute;
-  bottom: 0; left: 0; right: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--c-red), transparent);
   opacity: 0.5;
@@ -206,13 +287,16 @@ body {
   padding: 5px 12px 5px 10px;
   flex-shrink: 0;
   clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
-  font-family: 'Rajdhani', sans-serif;
+  font-family: "Rajdhani", sans-serif;
   font-weight: 600;
   font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--c-muted);
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
 }
 .filter-toggle-btn:hover,
 .filter-toggle-btn.open {
@@ -226,8 +310,9 @@ body {
   overflow: hidden;
   max-height: 600px;
   opacity: 1;
-  transition: max-height 0.32s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.22s ease;
+  transition:
+    max-height 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.22s ease;
 }
 .filter-body.collapsed {
   max-height: 0;
@@ -239,18 +324,21 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: rgba(255,255,255,0.04);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--c-border-dim);
   padding: 2px 7px 2px 5px;
   cursor: pointer;
-  font-family: 'Rajdhani', sans-serif;
+  font-family: "Rajdhani", sans-serif;
   font-weight: 600;
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--c-muted);
   clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
   white-space: nowrap;
 }
 .active-filter-badge:hover {
@@ -260,13 +348,13 @@ body {
 }
 .active-filter-badge[data-type="map"] {
   color: var(--c-red);
-  border-color: rgba(255,70,85,0.3);
-  background: rgba(255,70,85,0.06);
+  border-color: rgba(255, 70, 85, 0.3);
+  background: rgba(255, 70, 85, 0.06);
 }
 .active-filter-badge[data-type="agent"] {
   color: var(--c-blue);
-  border-color: rgba(73,165,229,0.3);
-  background: rgba(73,165,229,0.06);
+  border-color: rgba(73, 165, 229, 0.3);
+  background: rgba(73, 165, 229, 0.06);
 }
 .active-filter-badge[data-type="rank"] {
   color: var(--rank-color, var(--c-muted));
@@ -278,7 +366,7 @@ body {
 }
 
 .filter-label {
-  font-family: 'Rajdhani', sans-serif;
+  font-family: "Rajdhani", sans-serif;
   font-weight: 600;
   font-size: 11px;
   letter-spacing: 0.12em;
@@ -289,7 +377,7 @@ body {
 .filter-select {
   background: var(--c-surface-2);
   color: var(--c-text);
-  font-family: 'Barlow', sans-serif;
+  font-family: "Barlow", sans-serif;
   font-size: 13px;
   font-weight: 500;
   border: 1px solid var(--c-border);
@@ -302,11 +390,14 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23FF4655'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 10px center;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
-.filter-select:hover, .filter-select:focus {
+.filter-select:hover,
+.filter-select:focus {
   border-color: var(--c-red);
-  box-shadow: inset 0 0 0 1px rgba(255,70,85,0.3);
+  box-shadow: inset 0 0 0 1px rgba(255, 70, 85, 0.3);
 }
 .filter-select option {
   background: var(--c-surface-2);
@@ -314,7 +405,8 @@ body {
 }
 
 .filter-active-dot {
-  width: 5px; height: 5px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: var(--c-red);
   box-shadow: 0 0 6px var(--c-red);
@@ -323,7 +415,7 @@ body {
 
 /* ── Clear Button ─────────────────────────────────────────────────── */
 .clear-btn {
-  font-family: 'Rajdhani', sans-serif;
+  font-family: "Rajdhani", sans-serif;
   font-weight: 600;
   font-size: 12px;
   letter-spacing: 0.1em;
@@ -334,7 +426,9 @@ body {
   padding: 6px 14px;
   cursor: pointer;
   clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
-  transition: color 0.15s, border-color 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
 }
 .clear-btn:hover {
   color: var(--c-red);
@@ -354,8 +448,12 @@ body {
   backdrop-filter: blur(6px);
 }
 @keyframes backdrop-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .player-container {
@@ -366,17 +464,25 @@ body {
   animation: player-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @keyframes player-in {
-  from { opacity: 0; transform: scale(0.96) translateY(12px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 /* Corner targeting brackets */
 .player-frame {
   position: relative;
 }
-.player-frame::before, .player-frame::after,
-.player-frame .corner-bl::before, .player-frame .corner-tr::after {
-  content: '';
+.player-frame::before,
+.player-frame::after,
+.player-frame .corner-bl::before,
+.player-frame .corner-tr::after {
+  content: "";
   position: absolute;
   width: 24px;
   height: 24px;
@@ -384,16 +490,44 @@ body {
   border-style: solid;
   z-index: 2;
 }
-.player-frame::before  { top: -8px; left: -8px; border-width: 2px 0 0 2px; }
-.player-frame::after   { top: -8px; right: -8px; border-width: 2px 2px 0 0; }
-.corner-bl::before { bottom: -8px; left: -8px; border-width: 0 0 2px 2px; position: absolute; content: ''; width: 24px; height: 24px; border-color: var(--c-red); border-style: solid; }
-.corner-tr::after  { bottom: -8px; right: -8px; border-width: 0 2px 2px 0; position: absolute; content: ''; width: 24px; height: 24px; border-color: var(--c-red); border-style: solid; }
+.player-frame::before {
+  top: -8px;
+  left: -8px;
+  border-width: 2px 0 0 2px;
+}
+.player-frame::after {
+  top: -8px;
+  right: -8px;
+  border-width: 2px 2px 0 0;
+}
+.corner-bl::before {
+  bottom: -8px;
+  left: -8px;
+  border-width: 0 0 2px 2px;
+  position: absolute;
+  content: "";
+  width: 24px;
+  height: 24px;
+  border-color: var(--c-red);
+  border-style: solid;
+}
+.corner-tr::after {
+  bottom: -8px;
+  right: -8px;
+  border-width: 0 2px 2px 0;
+  position: absolute;
+  content: "";
+  width: 24px;
+  height: 24px;
+  border-color: var(--c-red);
+  border-style: solid;
+}
 
 .player-close {
   position: absolute;
   top: -44px;
   right: 20px;
-  font-family: 'Rajdhani', sans-serif;
+  font-family: "Rajdhani", sans-serif;
   font-weight: 600;
   font-size: 13px;
   letter-spacing: 0.1em;
@@ -404,7 +538,9 @@ body {
   padding: 5px 14px;
   cursor: pointer;
   clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
-  transition: color 0.15s, border-color 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -426,13 +562,17 @@ body {
   animation: skeleton-pulse 1.6s ease-in-out infinite;
 }
 @keyframes skeleton-pulse {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* ── Pagination ───────────────────────────────────────────────────── */
 .page-btn {
-  font-family: 'Rajdhani', sans-serif;
+  font-family: "Rajdhani", sans-serif;
   font-weight: 600;
   font-size: 13px;
   letter-spacing: 0.08em;
@@ -443,7 +583,10 @@ body {
   padding: 8px 20px;
   cursor: pointer;
   clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
 }
 .page-btn:hover:not(:disabled) {
   color: var(--c-text);

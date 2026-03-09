@@ -9,12 +9,12 @@
  * TEST_VIDEOS に検証したい YouTube 動画 ID を追加してください。
  * expected は省略可能（undefined にすると「比較なし」で結果だけ表示）。
  */
-import { mkdirSync, writeFileSync } from 'fs';
-import { resolve } from 'path';
-import { analyzeThumbnail } from './src/extractors/thumbnailExtractor.js';
-import { fetchThumbnailAsBase64 } from './src/extractors/thumbnailShared.js';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { sampleGameplayFrames } from './src/extractors/frameSampler.js';
 import { sampleGameplayFramesLocal } from './src/extractors/frameSamplerLocal.js';
+import { analyzeThumbnail } from './src/extractors/thumbnailExtractor.js';
+import { fetchThumbnailAsBase64 } from './src/extractors/thumbnailShared.js';
 import type { LLMProvider } from './src/extractors/types.js';
 
 const IMAGES_DIR = resolve('./tmp-images');
@@ -27,7 +27,11 @@ async function getFrames(videoId: string) {
   return { frames: cdn, source: 'cdn' as const };
 }
 
-async function saveImages(videoId: string, frames: Awaited<ReturnType<typeof getFrames>>['frames'], source: string): Promise<void> {
+async function saveImages(
+  videoId: string,
+  frames: Awaited<ReturnType<typeof getFrames>>['frames'],
+  source: string,
+): Promise<void> {
   const dir = resolve(IMAGES_DIR, videoId);
   mkdirSync(dir, { recursive: true });
 
@@ -40,7 +44,10 @@ async function saveImages(videoId: string, frames: Awaited<ReturnType<typeof get
   for (let i = 0; i < frames.length; i++) {
     const f = frames[i];
     const ext = f.mediaType.split('/')[1] ?? 'jpg';
-    writeFileSync(resolve(dir, `frame${i + 1}_${Math.round(f.position * 100)}pct.${ext}`), Buffer.from(f.base64, 'base64'));
+    writeFileSync(
+      resolve(dir, `frame${i + 1}_${Math.round(f.position * 100)}pct.${ext}`),
+      Buffer.from(f.base64, 'base64'),
+    );
   }
 
   console.log(`  画像保存: ${dir}/ (thumbnail + ${frames.length} frames [${source}])`);
@@ -76,10 +83,10 @@ const TEST_VIDEOS: TestCase[] = [
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-const GREEN  = '\x1b[32m';
-const RED    = '\x1b[31m';
+const GREEN = '\x1b[32m';
+const RED = '\x1b[31m';
 const YELLOW = '\x1b[33m';
-const RESET  = '\x1b[0m';
+const RESET = '\x1b[0m';
 
 function mark(actual: string | null | undefined, expected: string | null | undefined): string {
   if (expected === undefined) return String(actual ?? 'null');
@@ -126,7 +133,9 @@ async function main() {
       const { frames, source } = await getFrames(tc.videoId);
       await saveImages(tc.videoId, frames, source);
       console.log(`  frames: ${frames.length} [${source}]`);
-      const res = await analyzeThumbnail(tc.videoId, apiKey, provider, undefined, () => Promise.resolve(frames));
+      const res = await analyzeThumbnail(tc.videoId, apiKey, provider, undefined, () =>
+        Promise.resolve(frames),
+      );
 
       if (!res.result) {
         console.log(`  ${RED}失敗: サムネイル取得不可 (${res.failReason})${RESET}`);
@@ -135,16 +144,16 @@ async function main() {
       }
 
       const r = res.result;
-      console.log(`  map   : ${mark(r.map,   tc.expected?.map)}   [${r.map_confidence}]`);
+      console.log(`  map   : ${mark(r.map, tc.expected?.map)}   [${r.map_confidence}]`);
       console.log(`  agent : ${mark(r.agent, tc.expected?.agent)} [${r.agent_confidence}]`);
-      console.log(`  rank  : ${mark(r.rank,  tc.expected?.rank)}  [${r.rank_confidence}]`);
+      console.log(`  rank  : ${mark(r.rank, tc.expected?.rank)}  [${r.rank_confidence}]`);
       console.log(`  reasoning: ${r.reasoning}\n`);
 
       if (tc.expected !== undefined) {
         const ok =
-          (tc.expected.map   === undefined || r.map   === tc.expected.map)   &&
-          (tc.expected.agent === undefined || r.agent === tc.expected.agent)  &&
-          (tc.expected.rank  === undefined || r.rank  === tc.expected.rank);
+          (tc.expected.map === undefined || r.map === tc.expected.map) &&
+          (tc.expected.agent === undefined || r.agent === tc.expected.agent) &&
+          (tc.expected.rank === undefined || r.rank === tc.expected.rank);
         ok ? passed++ : failed++;
       }
     } catch (err) {
@@ -155,7 +164,9 @@ async function main() {
   }
 
   console.log(`${'═'.repeat(60)}`);
-  console.log(`結果: ${GREEN}${passed} passed${RESET} / ${RED}${failed} failed${RESET} / ${YELLOW}${skipped} skipped${RESET}`);
+  console.log(
+    `結果: ${GREEN}${passed} passed${RESET} / ${RED}${failed} failed${RESET} / ${YELLOW}${skipped} skipped${RESET}`,
+  );
 }
 
 main();

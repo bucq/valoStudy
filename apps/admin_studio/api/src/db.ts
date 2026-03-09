@@ -1,8 +1,8 @@
+import { existsSync, readdirSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { readdirSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -23,20 +23,20 @@ function findLocalD1Path(): string {
   if (!existsSync(stateDir)) {
     throw new Error(
       `ローカルD1が見つかりません。\n` +
-      `以下のいずれかを実行してください:\n` +
-      `  1. pnpm --filter valocoach-archive-api dev （wrangler dev で初期化）\n` +
-      `  2. pnpm --filter valocoach-archive-api bulk-collect （動画収集）\n` +
-      `または LOCAL_DB_PATH 環境変数でSQLiteファイルパスを指定してください。`
+        `以下のいずれかを実行してください:\n` +
+        `  1. pnpm --filter valocoach-archive-api dev （wrangler dev で初期化）\n` +
+        `  2. pnpm --filter valocoach-archive-api bulk-collect （動画収集）\n` +
+        `または LOCAL_DB_PATH 環境変数でSQLiteファイルパスを指定してください。`,
     );
   }
 
   // miniflare-D1DatabaseObject 配下の .sqlite ファイルを再帰的に検索
   const entries = readdirSync(stateDir, { recursive: true }) as string[];
-  const found = entries.find(e => String(e).endsWith('.sqlite'));
+  const found = entries.find((e) => String(e).endsWith('.sqlite'));
   if (!found) {
     throw new Error(
       `D1 SQLiteファイルが見つかりません (${stateDir})。\n` +
-      `wrangler dev を一度起動してDBを初期化してください。`
+        `wrangler dev を一度起動してDBを初期化してください。`,
     );
   }
   return join(stateDir, String(found));

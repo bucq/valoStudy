@@ -1,8 +1,8 @@
 const BASE = 'http://localhost:3001';
 
 // Workers API（リモート）への fetch — corrections の読み書きに使用
-const WORKERS_URL  = import.meta.env.VITE_WORKERS_URL  ?? 'http://localhost:8787';
-const ADMIN_TOKEN  = import.meta.env.VITE_ADMIN_TOKEN  ?? '';
+const WORKERS_URL = import.meta.env.VITE_WORKERS_URL ?? 'http://localhost:8787';
+const ADMIN_TOKEN = import.meta.env.VITE_ADMIN_TOKEN ?? '';
 
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, init);
@@ -16,66 +16,66 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
 // --- 型定義 ---
 
 export interface Video {
-  id:              string;
-  title:           string;
-  channelTitle:    string;
-  publishedAt:     string;
-  thumbnailUrl:    string;
-  duration?:       string;
-  viewCount?:      number;
-  map:             string | null;
-  agent:           string | null;
-  rank:            string | null;
-  mapConfidence:   number;
+  id: string;
+  title: string;
+  channelTitle: string;
+  publishedAt: string;
+  thumbnailUrl: string;
+  duration?: string;
+  viewCount?: number;
+  map: string | null;
+  agent: string | null;
+  rank: string | null;
+  mapConfidence: number;
   agentConfidence: number;
-  rankConfidence:  number;
-  mapSource:       string | null;
-  agentSource:     string | null;
-  rankSource:      string | null;
-  coachingType:    string;
+  rankConfidence: number;
+  mapSource: string | null;
+  agentSource: string | null;
+  rankSource: string | null;
+  coachingType: string;
   aiTaggingStatus: string;
-  reviewNeeded:    number;
+  reviewNeeded: number;
   isValorantCoaching: number;
-  aiTaggedAt?:     string | null;
-  llmReasoning?:   string | null;
+  aiTaggedAt?: string | null;
+  llmReasoning?: string | null;
 }
 
 export interface VideoListResponse {
-  total:  number;
-  page:   number;
-  limit:  number;
+  total: number;
+  page: number;
+  limit: number;
   videos: Video[];
 }
 
 export interface StatsResponse {
-  total:        number;
-  rejected:     number;
+  total: number;
+  rejected: number;
   reviewNeeded: number;
   byStatus: {
-    pending:     number;
+    pending: number;
     in_progress: number;
-    complete:    number;
-    skipped:     number;
-    failed:      number;
+    complete: number;
+    skipped: number;
+    failed: number;
   };
 }
 
 export interface Channel {
-  id:          string;
+  id: string;
   placeholder: boolean;
 }
 
 // ── Workers API (corrections) ─────────────────────────────────────
 
 export interface TagCorrectionRequest {
-  id:             number;
-  videoId:        string;
-  suggestedMap:   string | null;
+  id: number;
+  videoId: string;
+  suggestedMap: string | null;
   suggestedAgent: string | null;
-  suggestedRank:  string | null;
-  note:           string | null;
-  status:         string;
-  createdAt:      string;
+  suggestedRank: string | null;
+  note: string | null;
+  status: string;
+  createdAt: string;
 }
 
 async function workersFetch<T>(path: string, init?: RequestInit): Promise<T> {
@@ -83,7 +83,7 @@ async function workersFetch<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: {
       'X-Admin-Token': ADMIN_TOKEN,
-      'Content-Type':  'application/json',
+      'Content-Type': 'application/json',
       ...(init?.headers ?? {}),
     },
   });
@@ -107,6 +107,6 @@ export async function resolveVideoCorrections(
 ): Promise<void> {
   await workersFetch(`/api/admin/corrections/resolve-by-video/${encodeURIComponent(videoId)}`, {
     method: 'PATCH',
-    body:   JSON.stringify({ status }),
+    body: JSON.stringify({ status }),
   });
 }

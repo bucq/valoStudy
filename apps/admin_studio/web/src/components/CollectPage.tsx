@@ -1,31 +1,31 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { apiFetch, type Channel } from '../lib/api.ts';
 import { useSSE } from '../lib/useSSE.ts';
 
 interface CollectEvent {
-  type:             string;
-  channelId?:       string;
-  videoId?:         string;
-  title?:           string;
+  type: string;
+  channelId?: string;
+  videoId?: string;
+  title?: string;
   aiTaggingStatus?: string;
-  fetched?:         number;
-  coaching?:        number;
-  filtered?:        number;
-  total?:           number;
-  message?:         string;
+  fetched?: number;
+  coaching?: number;
+  filtered?: number;
+  total?: number;
+  message?: string;
 }
 
 export default function CollectPage() {
-  const [channels, setChannels]       = useState<Channel[]>([]);
-  const [channelId, setChannelId]     = useState('');
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [channelId, setChannelId] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [maxResults, setMaxResults]   = useState(20);
+  const [maxResults, setMaxResults] = useState(20);
   const { logs, running, error, start } = useSSE<CollectEvent>();
   const logRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     apiFetch<{ channels: Channel[] }>('/api/collect/channels')
-      .then(r => setChannels(r.channels))
+      .then((r) => setChannels(r.channels))
       .catch(console.error);
   }, []);
 
@@ -33,11 +33,15 @@ export default function CollectPage() {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, [logs]);
 
-  const collectAll    = () => start('/api/collect/all',    { maxPerChannel: 9999 });
-  const collectOne    = () => { if (channelId.trim()) start(`/api/collect/channel/${channelId.trim()}`, { maxResults: 9999 }); };
-  const collectSearch = () => { if (searchQuery.trim()) start('/api/collect/search', { query: searchQuery.trim(), maxResults }); };
+  const collectAll = () => start('/api/collect/all', { maxPerChannel: 9999 });
+  const collectOne = () => {
+    if (channelId.trim()) start(`/api/collect/channel/${channelId.trim()}`, { maxResults: 9999 });
+  };
+  const collectSearch = () => {
+    if (searchQuery.trim()) start('/api/collect/search', { query: searchQuery.trim(), maxResults });
+  };
 
-  const realChannels = channels.filter(c => !c.placeholder);
+  const realChannels = channels.filter((c) => !c.placeholder);
 
   return (
     <div className="animate-in space-y-5">
@@ -47,7 +51,10 @@ export default function CollectPage() {
           <div className="page-eyebrow">// MODULE</div>
           <h2 className="page-title">動画収集</h2>
         </div>
-        <span className="text-dim" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem' }}>
+        <span
+          className="text-dim"
+          style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem' }}
+        >
           {realChannels.length} channels registered
         </span>
       </header>
@@ -56,17 +63,25 @@ export default function CollectPage() {
       <div className="panel p-4">
         <div className="section-label">登録チャンネル</div>
         {channels.length === 0 ? (
-          <p className="text-dim" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem' }}>
-            <span className="live-dot text-accent" style={{ display: 'inline-block', marginRight: '0.5em' }} />
+          <p
+            className="text-dim"
+            style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem' }}
+          >
+            <span
+              className="live-dot text-accent"
+              style={{ display: 'inline-block', marginRight: '0.5em' }}
+            />
             Loading...
           </p>
         ) : (
           <div className="flex flex-wrap gap-1.5">
-            {channels.map(c => (
+            {channels.map((c) => (
               <span
                 key={c.id}
                 className={`channel-chip${c.placeholder ? ' placeholder' : ''}`}
-                onClick={() => { if (!c.placeholder) setChannelId(c.id); }}
+                onClick={() => {
+                  if (!c.placeholder) setChannelId(c.id);
+                }}
               >
                 {c.placeholder ? c.id : c.id.slice(0, 12) + '…'}
               </span>
@@ -77,15 +92,26 @@ export default function CollectPage() {
 
       {/* ── Action panels ───────────────────────── */}
       <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-
         {/* All channels */}
         <div className="panel p-4 space-y-3">
           <div className="section-label">全チャンネル収集</div>
           <p className="text-dim" style={{ fontSize: '0.8rem' }}>
             登録済み全チャンネルの動画をDBに追加します。
           </p>
-          <button onClick={collectAll} disabled={running} className="btn btn-accent w-full" style={{ justifyContent: 'center' }}>
-            {running ? <><span className="live-dot" style={{ marginRight: '0.4em' }} />収集中...</> : '▶ 全チャンネル収集'}
+          <button
+            onClick={collectAll}
+            disabled={running}
+            className="btn btn-accent w-full"
+            style={{ justifyContent: 'center' }}
+          >
+            {running ? (
+              <>
+                <span className="live-dot" style={{ marginRight: '0.4em' }} />
+                収集中...
+              </>
+            ) : (
+              '▶ 全チャンネル収集'
+            )}
           </button>
         </div>
 
@@ -96,10 +122,22 @@ export default function CollectPage() {
             className="field w-full"
             placeholder="Channel ID"
             value={channelId}
-            onChange={e => setChannelId(e.target.value)}
+            onChange={(e) => setChannelId(e.target.value)}
           />
-          <button onClick={collectOne} disabled={running || !channelId.trim()} className="btn btn-ghost w-full" style={{ justifyContent: 'center' }}>
-            {running ? <><span className="live-dot" style={{ marginRight: '0.4em' }} />収集中...</> : '▶ 収集'}
+          <button
+            onClick={collectOne}
+            disabled={running || !channelId.trim()}
+            className="btn btn-ghost w-full"
+            style={{ justifyContent: 'center' }}
+          >
+            {running ? (
+              <>
+                <span className="live-dot" style={{ marginRight: '0.4em' }} />
+                収集中...
+              </>
+            ) : (
+              '▶ 収集'
+            )}
           </button>
         </div>
 
@@ -110,22 +148,46 @@ export default function CollectPage() {
             className="field w-full"
             placeholder="検索クエリ"
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && collectSearch()}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && collectSearch()}
           />
           <div className="flex gap-2 items-center">
-            <span className="text-faint" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem' }}>MAX</span>
+            <span
+              className="text-faint"
+              style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem' }}
+            >
+              MAX
+            </span>
             <input
-              type="number" min={1} max={200}
+              type="number"
+              min={1}
+              max={200}
               className="field"
               style={{ width: '5rem' }}
               value={maxResults}
-              onChange={e => setMaxResults(parseInt(e.target.value) || 20)}
+              onChange={(e) => setMaxResults(parseInt(e.target.value, 10) || 20)}
             />
-            <span className="text-faint" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem' }}>件</span>
+            <span
+              className="text-faint"
+              style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem' }}
+            >
+              件
+            </span>
           </div>
-          <button onClick={collectSearch} disabled={running || !searchQuery.trim()} className="btn btn-ghost w-full" style={{ justifyContent: 'center' }}>
-            {running ? <><span className="live-dot" style={{ marginRight: '0.4em' }} />収集中...</> : '▶ 検索して収集'}
+          <button
+            onClick={collectSearch}
+            disabled={running || !searchQuery.trim()}
+            className="btn btn-ghost w-full"
+            style={{ justifyContent: 'center' }}
+          >
+            {running ? (
+              <>
+                <span className="live-dot" style={{ marginRight: '0.4em' }} />
+                収集中...
+              </>
+            ) : (
+              '▶ 検索して収集'
+            )}
           </button>
         </div>
       </div>
@@ -144,7 +206,9 @@ export default function CollectPage() {
           </div>
           <div ref={logRef} className="terminal-body" style={{ height: '20rem' }}>
             {error && <p style={{ color: '#FF4655' }}>ERROR: {error}</p>}
-            {logs.map((ev, i) => <LogLine key={i} event={ev} />)}
+            {logs.map((ev, i) => (
+              <LogLine key={i} event={ev} />
+            ))}
           </div>
         </div>
       )}
@@ -154,12 +218,12 @@ export default function CollectPage() {
 
 function LogLine({ event }: { event: CollectEvent }) {
   const colors: Record<string, string> = {
-    channel_start:   '#4A9EFF',
-    channel_done:    '#45D483',
+    channel_start: '#4A9EFF',
+    channel_done: '#45D483',
     video_collected: '#C8C8D0',
-    video_filtered:  '#444450',
-    done:            '#FFB84A',
-    error:           '#FF4655',
+    video_filtered: '#444450',
+    done: '#FFB84A',
+    error: '#FF4655',
   };
   const color = colors[event.type] ?? '#888896';
 

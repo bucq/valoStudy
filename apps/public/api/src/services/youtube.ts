@@ -3,22 +3,22 @@
 const YT_BASE = 'https://www.googleapis.com/youtube/v3';
 
 export interface YouTubeSnippet {
-  title:        string;
-  description:  string;
-  channelId:    string;
+  title: string;
+  description: string;
+  channelId: string;
   channelTitle: string;
-  publishedAt:  string;  // ISO 8601
-  tags?:        string[];
+  publishedAt: string; // ISO 8601
+  tags?: string[];
   thumbnails: {
     maxres?: { url: string };
-    high?:   { url: string };
+    high?: { url: string };
     medium?: { url: string };
     default?: { url: string };
   };
 }
 
 export interface YouTubeContentDetails {
-  duration: string;  // ISO 8601 e.g. PT12M30S
+  duration: string; // ISO 8601 e.g. PT12M30S
 }
 
 export interface YouTubeStatistics {
@@ -26,10 +26,10 @@ export interface YouTubeStatistics {
 }
 
 export interface YouTubeVideoItem {
-  id:             string;
-  snippet:        YouTubeSnippet;
+  id: string;
+  snippet: YouTubeSnippet;
   contentDetails: YouTubeContentDetails;
-  statistics:     YouTubeStatistics;
+  statistics: YouTubeStatistics;
 }
 
 interface SearchItem {
@@ -37,7 +37,7 @@ interface SearchItem {
 }
 
 interface SearchResponse {
-  items:         SearchItem[];
+  items: SearchItem[];
   nextPageToken?: string;
 }
 
@@ -68,8 +68,9 @@ export async function fetchChannelVideos(
   const chRes = await fetch(
     `${YT_BASE}/channels?${new URLSearchParams({ part: 'contentDetails', id: channelId, key: apiKey })}`,
   );
-  if (!chRes.ok) throw new Error(`YouTube channels.list failed (${chRes.status}): ${await chRes.text()}`);
-  const chData = await chRes.json() as ChannelsResponse;
+  if (!chRes.ok)
+    throw new Error(`YouTube channels.list failed (${chRes.status}): ${await chRes.text()}`);
+  const chData = (await chRes.json()) as ChannelsResponse;
   const uploadsPlaylistId = chData.items[0]?.contentDetails.relatedPlaylists.uploads;
   if (!uploadsPlaylistId) throw new Error(`uploads playlist not found for channel: ${channelId}`);
 
@@ -79,16 +80,17 @@ export async function fetchChannelVideos(
 
   while (videoIds.length < maxResults) {
     const params = new URLSearchParams({
-      part:       'snippet',
+      part: 'snippet',
       playlistId: uploadsPlaylistId,
       maxResults: '50',
-      key:        apiKey,
+      key: apiKey,
       ...(pageToken ? { pageToken } : {}),
     });
     const res = await fetch(`${YT_BASE}/playlistItems?${params}`);
-    if (!res.ok) throw new Error(`YouTube playlistItems.list failed (${res.status}): ${await res.text()}`);
-    const data = await res.json() as PlaylistItemsResponse;
-    videoIds.push(...data.items.map(i => i.snippet.resourceId.videoId));
+    if (!res.ok)
+      throw new Error(`YouTube playlistItems.list failed (${res.status}): ${await res.text()}`);
+    const data = (await res.json()) as PlaylistItemsResponse;
+    videoIds.push(...data.items.map((i) => i.snippet.resourceId.videoId));
     pageToken = data.nextPageToken;
     if (!pageToken) break;
   }
@@ -102,12 +104,12 @@ export async function fetchChannelVideos(
   for (const chunk of chunks) {
     const params = new URLSearchParams({
       part: 'snippet,contentDetails,statistics',
-      id:   chunk.join(','),
-      key:  apiKey,
+      id: chunk.join(','),
+      key: apiKey,
     });
     const res = await fetch(`${YT_BASE}/videos?${params}`);
     if (!res.ok) throw new Error(`YouTube videos.list failed (${res.status}): ${await res.text()}`);
-    const data = await res.json() as VideosResponse;
+    const data = (await res.json()) as VideosResponse;
     allItems.push(...data.items);
   }
 
@@ -124,26 +126,26 @@ export async function searchVideos(
   maxResults = 50,
 ): Promise<YouTubeVideoItem[]> {
   const params = new URLSearchParams({
-    part:      'id',
-    q:         query,
-    type:      'video',
+    part: 'id',
+    q: query,
+    type: 'video',
     maxResults: String(Math.min(50, maxResults)),
-    order:     'relevance',
-    key:       apiKey,
+    order: 'relevance',
+    key: apiKey,
   });
 
   const res = await fetch(`${YT_BASE}/search?${params}`);
   if (!res.ok) throw new Error(`YouTube search failed (${res.status})`);
-  const data = await res.json() as SearchResponse;
+  const data = (await res.json()) as SearchResponse;
 
   if (data.items.length === 0) return [];
 
-  const ids = data.items.map(i => i.id.videoId).join(',');
+  const ids = data.items.map((i) => i.id.videoId).join(',');
   const vRes = await fetch(
     `${YT_BASE}/videos?part=snippet,contentDetails,statistics&id=${ids}&key=${apiKey}`,
   );
   if (!vRes.ok) throw new Error(`YouTube videos.list failed (${vRes.status})`);
-  const vData = await vRes.json() as VideosResponse;
+  const vData = (await vRes.json()) as VideosResponse;
   return vData.items;
 }
 

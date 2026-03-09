@@ -7,25 +7,25 @@ import '../styles/valo.css';
 
 const API_BASE = import.meta.env.API_BASE_URL;
 
-let filters: FiltersResponse = { maps: [], agents: [], ranks: [], coaches: [] };
+let _filters: FiltersResponse = { maps: [], agents: [], ranks: [], coaches: [] };
 try {
   const res = await fetch(`${API_BASE}/api/videos/filters`);
-  if (res.ok) filters = await res.json();
+  if (res.ok) _filters = await res.json();
 } catch {
   // API not running locally — ignore
 }
 
 const url = new URL(Astro.request.url);
-const initialFilters: VideoFilters = {
-  map:   url.searchParams.get('map')   ?? undefined,
+const _initialFilters: VideoFilters = {
+  map: url.searchParams.get('map') ?? undefined,
   agent: url.searchParams.get('agent') ?? undefined,
-  rank:  url.searchParams.get('rank')  ?? undefined,
+  rank: url.searchParams.get('rank') ?? undefined,
   coach: url.searchParams.get('coach') ?? undefined,
-  page:  Number(url.searchParams.get('page') ?? '1'),
+  page: Number(url.searchParams.get('page') ?? '1'),
 };
 
 const siteUrl = 'https://valocoach-archive.pages.dev';
-const ogImage = `${siteUrl}/logo.png`;
+const _ogImage = `${siteUrl}/logo.png`;
 ---
 
 <html lang="ja">
@@ -49,7 +49,7 @@ const ogImage = `${siteUrl}/logo.png`;
     <meta property="og:type" content="website" />
     <meta property="og:title" content="ValoCoach Archive — Valorant コーチング動画アーカイブ" />
     <meta property="og:description" content="Valorantのコーチング動画をmap・agent・rank・coachで絞り込んで検索・視聴できるアーカイブサービス" />
-    <meta property="og:image" content={ogImage} />
+    <meta property="og:image" content={_ogImage} />
     <meta property="og:image:width" content="512" />
     <meta property="og:image:height" content="512" />
     <meta property="og:url" content={siteUrl} />
@@ -59,7 +59,7 @@ const ogImage = `${siteUrl}/logo.png`;
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="ValoCoach Archive — Valorant Coaching Archive" />
     <meta name="twitter:description" content="Valorantのコーチング動画をmap・agent・rank・coachでフィルタリング" />
-    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image" content={_ogImage} />
   </head>
   <body>
 
@@ -160,8 +160,8 @@ const ogImage = `${siteUrl}/logo.png`;
     <!-- フィルターパネル（React Island） -->
     <FilterPanel
       client:load
-      availableFilters={filters}
-      initialFilters={initialFilters}
+      availableFilters={_filters}
+      initialFilters={_initialFilters}
     />
 
     <!-- 動画グリッド（React Island） -->
@@ -169,7 +169,7 @@ const ogImage = `${siteUrl}/logo.png`;
       <VideoGrid
         client:load
         apiBase={API_BASE}
-        initialFilters={initialFilters}
+        initialFilters={_initialFilters}
       />
     </main>
 

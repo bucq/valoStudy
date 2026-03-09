@@ -1,15 +1,15 @@
 import type { Page } from '../../App.tsx';
 
 const NAV: { id: Page; label: string; code: string }[] = [
-  { id: 'videos',  label: '動画一覧', code: 'VIDEOS'  },
+  { id: 'videos', label: '動画一覧', code: 'VIDEOS' },
   { id: 'collect', label: '動画収集', code: 'COLLECT' },
-  { id: 'tag',     label: 'タグ付け', code: 'TAGGING' },
-  { id: 'review',  label: 'レビュー', code: 'REVIEW'  },
-  { id: 'sync',    label: 'D1 同期',  code: 'SYNC'    },
+  { id: 'tag', label: 'タグ付け', code: 'TAGGING' },
+  { id: 'review', label: 'レビュー', code: 'REVIEW' },
+  { id: 'sync', label: 'D1 同期', code: 'SYNC' },
 ];
 
 interface Props {
-  current:    Page;
+  current: Page;
   onNavigate: (page: Page) => void;
 }
 
@@ -26,13 +26,22 @@ export default function Sidebar({ current, onNavigate }: Props) {
         </div>
         <div
           className="text-accent font-bold uppercase leading-none"
-          style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '1.45rem', letterSpacing: '0.04em' }}
+          style={{
+            fontFamily: 'Rajdhani, sans-serif',
+            fontSize: '1.45rem',
+            letterSpacing: '0.04em',
+          }}
         >
           ValoCoach
         </div>
         <div
           className="text-dim font-semibold uppercase"
-          style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.85rem', letterSpacing: '0.18em', marginTop: '0.1rem' }}
+          style={{
+            fontFamily: 'Rajdhani, sans-serif',
+            fontSize: '0.85rem',
+            letterSpacing: '0.18em',
+            marginTop: '0.1rem',
+          }}
         >
           Admin Studio
         </div>
@@ -52,11 +61,14 @@ export default function Sidebar({ current, onNavigate }: Props) {
                 background: active ? 'rgba(255,70,85,0.06)' : 'transparent',
                 color: active ? '#C8C8D0' : '#888896',
               }}
-              onMouseEnter={e => {
+              onMouseEnter={(e) => {
                 if (!active) (e.currentTarget as HTMLElement).style.background = '#17171C';
               }}
-              onMouseLeave={e => {
-                if (!active) (e.currentTarget as HTMLElement).style.background = active ? 'rgba(255,70,85,0.06)' : 'transparent';
+              onMouseLeave={(e) => {
+                if (!active)
+                  (e.currentTarget as HTMLElement).style.background = active
+                    ? 'rgba(255,70,85,0.06)'
+                    : 'transparent';
               }}
             >
               {/* Active left border */}
@@ -68,7 +80,13 @@ export default function Sidebar({ current, onNavigate }: Props) {
               )}
 
               {/* Indicator */}
-              <span style={{ fontSize: '0.42rem', color: active ? '#FF4655' : '#444450', transition: 'color 0.15s' }}>
+              <span
+                style={{
+                  fontSize: '0.42rem',
+                  color: active ? '#FF4655' : '#444450',
+                  transition: 'color 0.15s',
+                }}
+              >
                 {active ? '◆' : '◇'}
               </span>
 
@@ -76,7 +94,11 @@ export default function Sidebar({ current, onNavigate }: Props) {
               <span className="flex-1">
                 <span
                   className="block font-semibold"
-                  style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', letterSpacing: '0.04em' }}
+                  style={{
+                    fontFamily: 'Rajdhani, sans-serif',
+                    fontSize: '0.9rem',
+                    letterSpacing: '0.04em',
+                  }}
                 >
                   {item.label}
                 </span>
@@ -94,9 +116,7 @@ export default function Sidebar({ current, onNavigate }: Props) {
                 </span>
               </span>
 
-              {active && (
-                <span style={{ fontSize: '0.6rem', color: '#FF4655' }}>▶</span>
-              )}
+              {active && <span style={{ fontSize: '0.6rem', color: '#FF4655' }}>▶</span>}
             </button>
           );
         })}
@@ -114,7 +134,9 @@ export default function Sidebar({ current, onNavigate }: Props) {
             ONLINE
           </span>
         </div>
-        <div className="text-faint" style={{ opacity: 0.5, marginTop: '0.15rem' }}>localhost:3001</div>
+        <div className="text-faint" style={{ opacity: 0.5, marginTop: '0.15rem' }}>
+          localhost:3001
+        </div>
       </div>
     </aside>
   );

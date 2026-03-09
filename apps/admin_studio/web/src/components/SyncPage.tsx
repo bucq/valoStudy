@@ -1,19 +1,23 @@
-import { useRef, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSSE } from '../lib/useSSE.ts';
 
 interface SyncEvent {
-  type:    'step' | 'done' | 'error';
+  type: 'step' | 'done' | 'error';
   message: string;
 }
 
 function SyncPanel({
-  title, description, flowNodes, buttonLabel, endpoint,
+  title,
+  description,
+  flowNodes,
+  buttonLabel,
+  endpoint,
 }: {
-  title:       string;
+  title: string;
   description: string;
-  flowNodes:   [string, string, string];
+  flowNodes: [string, string, string];
   buttonLabel: string;
-  endpoint:    string;
+  endpoint: string;
 }) {
   const { logs, running, error, start } = useSSE<SyncEvent>();
   const logRef = useRef<HTMLDivElement>(null);
@@ -22,8 +26,8 @@ function SyncPanel({
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, [logs]);
 
-  const isDone  = logs.some(l => l.type === 'done');
-  const isError = logs.some(l => l.type === 'error') || !!error;
+  const isDone = logs.some((l) => l.type === 'done');
+  const isError = logs.some((l) => l.type === 'error') || !!error;
 
   return (
     <div className="panel p-5 space-y-4">
@@ -32,7 +36,10 @@ function SyncPanel({
         {description}
       </p>
 
-      <div className="flex items-center gap-2 flex-wrap" style={{ padding: '0.75rem', background: '#0B0B0D', border: '1px solid #222228' }}>
+      <div
+        className="flex items-center gap-2 flex-wrap"
+        style={{ padding: '0.75rem', background: '#0B0B0D', border: '1px solid #222228' }}
+      >
         <span className="flow-node">{flowNodes[0]}</span>
         <span className="flow-arrow">→ export →</span>
         <span className="flow-node">{flowNodes[1]}</span>
@@ -41,18 +48,28 @@ function SyncPanel({
       </div>
 
       <button onClick={() => start(endpoint, {})} disabled={running} className="btn btn-info">
-        {running
-          ? <><span className="live-dot" style={{ marginRight: '0.4em' }} />処理中...</>
-          : buttonLabel}
+        {running ? (
+          <>
+            <span className="live-dot" style={{ marginRight: '0.4em' }} />
+            処理中...
+          </>
+        ) : (
+          buttonLabel
+        )}
       </button>
 
-      {isDone  && (
-        <p className="text-ok" style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem' }}>
+      {isDone && (
+        <p
+          className="text-ok"
+          style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem' }}
+        >
           ✔ 完了
         </p>
       )}
       {isError && (
-        <p style={{ color: '#FF4655', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem' }}>
+        <p
+          style={{ color: '#FF4655', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem' }}
+        >
           ✘ エラーが発生しました
         </p>
       )}
@@ -71,14 +88,14 @@ function SyncPanel({
           <div ref={logRef} className="terminal-body" style={{ height: '10rem' }}>
             {error && <p style={{ color: '#FF4655' }}>ERROR: {error}</p>}
             {logs.map((ev, i) => (
-              <p key={i} style={{
-                color: ev.type === 'done'  ? '#45D483' :
-                       ev.type === 'error' ? '#FF4655' :
-                       '#C8C8D0',
-              }}>
-                {ev.type === 'done'  ? '✔ ' :
-                 ev.type === 'error' ? '✘ ' :
-                 '→ '}
+              <p
+                key={i}
+                style={{
+                  color:
+                    ev.type === 'done' ? '#45D483' : ev.type === 'error' ? '#FF4655' : '#C8C8D0',
+                }}
+              >
+                {ev.type === 'done' ? '✔ ' : ev.type === 'error' ? '✘ ' : '→ '}
                 {ev.message}
               </p>
             ))}

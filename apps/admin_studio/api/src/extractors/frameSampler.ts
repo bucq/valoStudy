@@ -75,7 +75,7 @@ async function fetchFrameAtIndex(
         frameType: 'full',
       };
     } catch {
-      if (attempt < 1) await new Promise(r => setTimeout(r, 300));
+      if (attempt < 1) await new Promise((r) => setTimeout(r, 300));
     }
   }
   return null;

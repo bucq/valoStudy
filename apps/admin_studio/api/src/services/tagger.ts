@@ -5,13 +5,13 @@
  * wrangler サブプロセス不要。SSE でリアルタイム進捗通知に対応。
  */
 
+import { videos } from '@public-api/db/schema.js';
 import { eq, inArray } from 'drizzle-orm';
 import { db } from '../db.js';
-import { videos } from '@public-api/db/schema.js';
-import { analyzeThumbnail } from '../extractors/thumbnailExtractor.js';
-import { detectCoachingType } from '../extractors/regexExtractor.js';
 import { sampleGameplayFrames } from '../extractors/frameSampler.js';
 import { sampleGameplayFramesLocal } from '../extractors/frameSamplerLocal.js';
+import { detectCoachingType } from '../extractors/regexExtractor.js';
+import { analyzeThumbnail } from '../extractors/thumbnailExtractor.js';
 
 /** yt-dlp → CDN の順でフレームを取得する */
 async function getFrames(videoId: string) {
@@ -26,10 +26,16 @@ const CONCURRENCY = 3;
 const RATE_LIMIT_STAGGER_MS = 2000; // 並行開始時のずらし時間
 
 const CONFIDENCE_VALUE: Record<string, number> = {
-  manual: 100, regex: 80, caption_llm: 65, thumbnail_llm: 45,
+  manual: 100,
+  regex: 80,
+  caption_llm: 65,
+  thumbnail_llm: 45,
 };
 const CONFIDENCE_FLOAT_MAP: Record<string, number> = {
-  high: 0.9, medium: 0.65, low: 0.45, none: 0,
+  high: 0.9,
+  medium: 0.65,
+  low: 0.45,
+  none: 0,
 };
 
 export interface TagEvent {
@@ -55,13 +61,10 @@ export interface TagOptions {
   onEvent?: (event: TagEvent) => void;
 }
 
-export async function tagPendingVideos(opts: TagOptions): Promise<{ processed: number; success: number; failed: number }> {
-  const {
-    geminiApiKey,
-    maxCount = 500,
-    dryRun = false,
-    onEvent,
-  } = opts;
+export async function tagPendingVideos(
+  opts: TagOptions,
+): Promise<{ processed: number; success: number; failed: number }> {
+  const { geminiApiKey, maxCount = 500, dryRun = false, onEvent } = opts;
 
   const emit = (event: TagEvent) => onEvent?.(event);
 
@@ -79,9 +82,7 @@ export async function tagPendingVideos(opts: TagOptions): Promise<{ processed: n
       coachingType: videos.coachingType,
     })
     .from(videos)
-    .where(
-      inArray(videos.aiTaggingStatus, ['pending', 'failed'])
-    )
+    .where(inArray(videos.aiTaggingStatus, ['pending', 'failed']))
     .limit(maxCount);
 
   if (rows.length === 0) {
@@ -97,9 +98,9 @@ export async function tagPendingVideos(opts: TagOptions): Promise<{ processed: n
   const now = new Date().toISOString();
 
   // ワーカー関数
-  const processVideo = async (video: typeof rows[0], index: number) => {
+  const processVideo = async (video: (typeof rows)[0], index: number) => {
     // 開始を少しずらして API への同時アクセス集中を避ける
-    await new Promise(r => setTimeout(r, (index % CONCURRENCY) * RATE_LIMIT_STAGGER_MS));
+    await new Promise((r) => setTimeout(r, (index % CONCURRENCY) * RATE_LIMIT_STAGGER_MS));
 
     const MAX_RETRIES = 3;
     const RETRY_WAIT_MS = 60000; // レート制限時の待機時間（1分）
@@ -107,7 +108,13 @@ export async function tagPendingVideos(opts: TagOptions): Promise<{ processed: n
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
         if (attempt === 0) {
-          emit({ type: 'progress', current: ++processedCount, total: rows.length, videoId: video.id, title: video.title });
+          emit({
+            type: 'progress',
+            current: ++processedCount,
+            total: rows.length,
+            videoId: video.id,
+            title: video.title,
+          });
         }
 
         const { result, failReason } = await analyzeThumbnail(
@@ -120,48 +127,69 @@ export async function tagPendingVideos(opts: TagOptions): Promise<{ processed: n
 
         if (!result) {
           if (!dryRun) {
-            await db.update(videos).set({
-              aiTaggingStatus: 'failed',
-              aiTaggedAt: now,
-              updatedAt: now,
-            }).where(eq(videos.id, video.id));
+            await db
+              .update(videos)
+              .set({
+                aiTaggingStatus: 'failed',
+                aiTaggedAt: now,
+                updatedAt: now,
+              })
+              .where(eq(videos.id, video.id));
           }
-          emit({ type: 'failed', videoId: video.id, title: video.title, message: failReason ?? 'no result' });
+          emit({
+            type: 'failed',
+            videoId: video.id,
+            title: video.title,
+            message: failReason ?? 'no result',
+          });
           failCount++;
           return;
         }
 
-        const incomingConf = CONFIDENCE_VALUE['thumbnail_llm']!;
+        const incomingConf = CONFIDENCE_VALUE.thumbnail_llm!;
         const resolvedMap = resolveField(result.map, video.map, video.mapSource, incomingConf);
-        const resolvedAgent = resolveField(result.agent, video.agent, video.agentSource, incomingConf);
+        const resolvedAgent = resolveField(
+          result.agent,
+          video.agent,
+          video.agentSource,
+          incomingConf,
+        );
         const resolvedRank = resolveField(result.rank, video.rank, video.rankSource, incomingConf);
 
         const reviewNeeded =
           (result.map !== null && result.map_confidence !== 'high') ||
-            (result.agent !== null && result.agent_confidence !== 'high') ||
-            (result.rank !== null && result.rank_confidence !== 'high') ? 1 : 0;
+          (result.agent !== null && result.agent_confidence !== 'high') ||
+          (result.rank !== null && result.rank_confidence !== 'high')
+            ? 1
+            : 0;
 
         // LLM判定を優先し、未返却の場合はタイトルregexにフォールバック
         const coachingType = result.coaching_type ?? detectCoachingType(video.title);
 
         if (!dryRun) {
-          await db.update(videos).set({
-            map: resolvedMap.value,
-            agent: resolvedAgent.value,
-            rank: resolvedRank.value,
-            mapSource: resolvedMap.source,
-            agentSource: resolvedAgent.source,
-            rankSource: resolvedRank.source,
-            mapConfidence: result.map !== null ? CONFIDENCE_FLOAT_MAP[result.map_confidence] ?? 0.45 : 0,
-            agentConfidence: result.agent !== null ? CONFIDENCE_FLOAT_MAP[result.agent_confidence] ?? 0.45 : 0,
-            rankConfidence: result.rank !== null ? CONFIDENCE_FLOAT_MAP[result.rank_confidence] ?? 0.45 : 0,
-            coachingType,
-            aiTaggingStatus: 'complete',
-            aiTaggedAt: now,
-            updatedAt: now,
-            reviewNeeded,
-            llmReasoning: JSON.stringify({ thumbnailLLM: result.reasoning }),
-          }).where(eq(videos.id, video.id));
+          await db
+            .update(videos)
+            .set({
+              map: resolvedMap.value,
+              agent: resolvedAgent.value,
+              rank: resolvedRank.value,
+              mapSource: resolvedMap.source,
+              agentSource: resolvedAgent.source,
+              rankSource: resolvedRank.source,
+              mapConfidence:
+                result.map !== null ? (CONFIDENCE_FLOAT_MAP[result.map_confidence] ?? 0.45) : 0,
+              agentConfidence:
+                result.agent !== null ? (CONFIDENCE_FLOAT_MAP[result.agent_confidence] ?? 0.45) : 0,
+              rankConfidence:
+                result.rank !== null ? (CONFIDENCE_FLOAT_MAP[result.rank_confidence] ?? 0.45) : 0,
+              coachingType,
+              aiTaggingStatus: 'complete',
+              aiTaggedAt: now,
+              updatedAt: now,
+              reviewNeeded,
+              llmReasoning: JSON.stringify({ thumbnailLLM: result.reasoning }),
+            })
+            .where(eq(videos.id, video.id));
         }
 
         emit({
@@ -174,7 +202,6 @@ export async function tagPendingVideos(opts: TagOptions): Promise<{ processed: n
         });
         successCount++;
         return; // 成功したので終了
-
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         const isRateLimit = msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED');
@@ -182,19 +209,25 @@ export async function tagPendingVideos(opts: TagOptions): Promise<{ processed: n
         if (isRateLimit && attempt < MAX_RETRIES) {
           emit({
             type: 'rate_limited',
-            message: `レート制限に達しました。${RETRY_WAIT_MS / 1000}秒後に再試行します (${attempt + 1}/${MAX_RETRIES})`
+            message: `レート制限に達しました。${RETRY_WAIT_MS / 1000}秒後に再試行します (${attempt + 1}/${MAX_RETRIES})`,
           });
-          await new Promise(r => setTimeout(r, RETRY_WAIT_MS));
+          await new Promise((r) => setTimeout(r, RETRY_WAIT_MS));
           continue; // リトライ
         }
 
         // 失敗確定時の処理
         if (!dryRun) {
-          await db.update(videos).set({ aiTaggingStatus: 'failed', aiTaggedAt: now, updatedAt: now }).where(eq(videos.id, video.id));
+          await db
+            .update(videos)
+            .set({ aiTaggingStatus: 'failed', aiTaggedAt: now, updatedAt: now })
+            .where(eq(videos.id, video.id));
         }
 
         if (isRateLimit) {
-          emit({ type: 'rate_limited', message: 'レート制限が継続しているため一括処理を中断します。' });
+          emit({
+            type: 'rate_limited',
+            message: 'レート制限が継続しているため一括処理を中断します。',
+          });
           failCount++;
           throw new Error('RATE_LIMIT'); // これにより Promise.all が失敗し、メインループが break する
         }
@@ -206,10 +239,16 @@ export async function tagPendingVideos(opts: TagOptions): Promise<{ processed: n
     }
   };
 
-  function resolveField(newVal: string | null, existVal: string | null, existSrc: string | null, incomingWeight: number) {
+  function resolveField(
+    newVal: string | null,
+    existVal: string | null,
+    existSrc: string | null,
+    incomingWeight: number,
+  ) {
     if (newVal === null) return { value: existVal, source: existSrc };
     const existConf = existSrc ? (CONFIDENCE_VALUE[existSrc] ?? 0) : 0;
-    if (existVal !== null && existConf > incomingWeight) return { value: existVal, source: existSrc };
+    if (existVal !== null && existConf > incomingWeight)
+      return { value: existVal, source: existSrc };
     return { value: newVal, source: 'thumbnail_llm' };
   }
 

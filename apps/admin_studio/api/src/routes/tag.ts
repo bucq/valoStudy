@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { tagPendingVideos, resetTaggingStatus, type TagEvent } from '../services/tagger.js';
+import { resetTaggingStatus, type TagEvent, tagPendingVideos } from '../services/tagger.js';
 
 export const tagRoute = new Hono();
 
@@ -18,15 +18,16 @@ function sseStream(handler: (send: (event: TagEvent) => void) => Promise<void>) 
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
+      Connection: 'keep-alive',
     },
   });
 }
 
 /** POST /api/tag/batch — pending/failed 一括タグ付け（SSE） */
 tagRoute.post('/batch', async (c) => {
-  const body: { maxCount?: number; dryRun?: boolean; provider?: 'gemini' | 'gemma' | 'anthropic' } = await c.req.json().catch(() => ({}));
-  const apiKey = process.env['GEMINI_API_KEY'] ?? '';
+  const body: { maxCount?: number; dryRun?: boolean; provider?: 'gemini' | 'gemma' | 'anthropic' } =
+    await c.req.json().catch(() => ({}));
+  const apiKey = process.env.GEMINI_API_KEY ?? '';
   if (!apiKey) return c.json({ error: 'GEMINI_API_KEY not set' }, 500);
 
   return sseStream(async (send) => {
