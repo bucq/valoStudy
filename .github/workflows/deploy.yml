@@ -50,4 +50,9 @@ jobs:
         env:
           VITE_API_URL: ${{ secrets.ADMIN_API_URL }}
           VITE_ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
-      - run: pnpm deploy:admin -- --branch=main
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          packageManager: pnpm
+          workingDirectory: apps/admin_studio/web
+          command: pages deploy dist --project-name=valocoach-admin
