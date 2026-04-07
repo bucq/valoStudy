@@ -54,5 +54,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           packageManager: pnpm
-          workingDirectory: apps/admin_studio/web
-          command: pages deploy dist --project-name=valocoach-admin
+          workingDirectory: apps/public/api
+          command: pages deploy ../../admin_studio/web/dist --project-name=valocoach-admin --branch=main
