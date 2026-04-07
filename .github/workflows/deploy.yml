@@ -50,4 +50,4 @@ jobs:
         env:
           VITE_API_URL: ${{ secrets.ADMIN_API_URL }}
           VITE_ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
-      - run: pnpm deploy:admin
+      - run: pnpm deploy:admin -- --branch=main
