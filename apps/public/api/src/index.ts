@@ -26,6 +26,7 @@ app.use(
       if (origin === 'http://localhost:4321') return origin;
       if (origin.endsWith('.valocoach-archive.pages.dev')) return origin;
       if (origin === 'https://valocoach-archive.pages.dev') return origin;
+      if (origin.endsWith('.bucq.workers.dev')) return origin;
       return null;
     },
     allowMethods: ['GET', 'POST'],
