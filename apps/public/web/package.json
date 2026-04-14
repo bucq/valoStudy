@@ -6,7 +6,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "cf:deploy": "wrangler deploy"
   },
   "dependencies": {
     "@valocoach/valorant": "workspace:*",

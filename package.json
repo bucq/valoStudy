@@ -10,7 +10,7 @@
     "build:web": "pnpm --filter valocoach-archive-web build",
     "build:api": "pnpm --filter valocoach-archive-api build",
     "deploy:api": "pnpm --filter valocoach-archive-api deploy",
-    "deploy:web": "pnpm --filter valocoach-archive-web deploy",
+    "deploy:web": "pnpm --filter valocoach-archive-web cf:deploy",
     "deploy:admin": "pnpm --filter admin_studio-web pages:deploy",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",

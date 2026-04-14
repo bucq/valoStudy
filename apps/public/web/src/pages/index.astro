@@ -5,7 +5,10 @@ import type { FiltersResponse, VideoFilters } from '../lib/api';
 import '../styles/global.css';
 import '../styles/valo.css';
 
-const API_BASE = import.meta.env.API_BASE_URL;
+// wrangler.toml [vars] はランタイム変数なので Astro.locals.runtime.env で取得
+// ローカル開発時は import.meta.env にフォールバック
+const runtime = (Astro.locals as { runtime?: { env?: { API_BASE_URL?: string } } }).runtime;
+const API_BASE = runtime?.env?.API_BASE_URL ?? import.meta.env.API_BASE_URL ?? 'http://localhost:8787';
 
 let _filters: FiltersResponse = { maps: [], agents: [], ranks: [], coaches: [] };
 try {
