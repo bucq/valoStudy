@@ -35,7 +35,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           packageManager: pnpm
           workingDirectory: apps/public/web
-          command: pages deploy dist --project-name=valocoach-archive
+          command: deploy
 
   deploy-admin:
     runs-on: ubuntu-latest
